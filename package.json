@@ -2,9 +2,5 @@
   "name": "resolutio-mentoria",
   "version": "1.0.0",
   "private": true,
-  "description": "Sistema Completo de Mentoria Acadêmica Resolutio",
-  "scripts": {
-    "start": "npx serve frontend",
-    "dev": "npx serve frontend"
-  }
+  "description": "Sistema Completo de Mentoria Acadêmica Resolutio"
 }

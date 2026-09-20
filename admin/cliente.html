@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cliente — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  body { font-family: var(--font-body); background: linear-gradient(170deg, #fcfaf6 0%, #f4efe8 100%); color: #1a1715; overflow-x: hidden; }
+  .sidebar { width: 200px; background: linear-gradient(180deg, #1a1715 0%, #100e0c 100%); border-right: 1px solid var(--line); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; box-shadow: 6px 0 20px rgba(30,21,19,0.04); }
+  .sidebar__brand { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; }
+  .sidebar__logo { width: 44px; height: 44px; border-radius: 50%; background: var(--primary-50); border: 1px solid var(--primary-200); padding: 2px; margin-bottom: 12px; }
+  .sidebar__logo img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .sidebar__title { font-family: var(--font-body); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.15em; color: #fff; text-transform: uppercase; text-align: center; width: 100%; }
+  .nav__label { font-family: var(--font-body); font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 18px 14px 8px; }
+  .nav__item { color: var(--text); font-size: 0.82rem; padding: 10px 14px; border-radius: 10px; transition: background 150ms ease; display: flex; align-items: center; gap: 10px; }
+  .nav__item:hover { background: var(--primary-50); color: var(--primary-700); }
+  .nav__item--active { background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(114,80,71,0.25); }
+  .nav__badge { background: var(--bege); color: var(--primary-700); }
+  .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+  .nav__icon svg { width: 16px; height: 16px; }
+  .sidebar__footer { padding: 16px; border-top: 1px solid var(--line-soft); }
+  .user { background: rgba(255,255,255,0.8); border-radius: 14px; padding: 12px; border: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .user__avatar { background: linear-gradient(135deg, var(--primary), var(--primary-700)); box-shadow: 0 4px 12px rgba(114,80,71,0.25); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.72rem; color: #fff; }
+  .user__name { color: var(--ink); font-weight: 600; font-size: 0.80rem; }
+  .user__email { color: var(--muted); font-size: 0.66rem; }
+  .main { flex: 1; margin-left: 200px; min-height: 100vh; }
+  .topbar { height: 56px; background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 50; }
+  .topbar__title { font-family: var(--font-body); font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+  .topbar__subtitle { font-size: 0.80rem; color: var(--muted); }
+  .page { padding: 28px 32px; max-width: 1180px; width: 100%; margin: 0 auto; }
+  @keyframes riseUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-up { opacity: 0; transform: translateY(28px); }
+  .anim-up.is-visible { animation: riseUp 0.9s cubic-bezier(0.22,1,0.36,1) both; }
+  /* Client header */
+  .client-header { background: linear-gradient(135deg, #2a201c, #3d2e26); border-radius: 24px; padding: 36px; color: #fff; margin-bottom: 24px; display: flex; gap: 24px; align-items: center; box-shadow: 0 20px 60px rgba(42,30,20,0.30); }
+  .client-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-700)); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; flex-shrink: 0; box-shadow: 0 8px 24px rgba(114,80,71,0.30); }
+  .client-info h1 { font-family: var(--font-display); font-size: 2rem; font-weight: 300; letter-spacing: -0.03em; }
+  .client-info p { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 4px; }
+  .client-meta { display: flex; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
+  .client-meta-item { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+  .client-meta-item strong { color: #fff; font-weight: 600; }
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #fff; border-radius: 14px; padding: 4px; border: 1px solid var(--line); }
+  .tab { padding: 10px 18px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 150ms; color: var(--muted); border: none; background: transparent; font-family: inherit; }
+  .tab:hover { color: var(--ink); background: var(--primary-50); }
+  .tab--active { background: var(--primary); color: #fff; }
+  .tab-panel { display: none; }
+  .tab-panel--active { display: block; }
+  /* Sections */
+  .section-card { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); margin-bottom: 16px; }
+  .section-card__title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 400; color: var(--ink); margin-bottom: 16px; }
+  .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line-soft); font-size: 0.88rem; }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--muted); }
+  .info-value { font-weight: 600; color: var(--ink); }
+  .action-btn { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: #fff; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 150ms; display: inline-flex; align-items: center; gap: 4px; font-family: inherit; }
+  .action-btn:hover { transform: translateY(-1px); }
+  .action-btn--success { color: var(--success); border-color: #c8dfcc; }
+  .action-btn--success:hover { background: var(--success-bg); }
+  .action-btn--primary { color: var(--primary); border-color: var(--primary-200); }
+  .action-btn--primary:hover { background: var(--primary-50); }
+  .action-btn--warning { color: var(--warning); border-color: #f0dfb5; }
+  .action-btn--warning:hover { background: var(--warning-bg); }
+  .action-btn svg { width: 12px; height: 12px; }
+  /* Timeline */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before { content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--line); border-radius: 1px; }
+  .timeline-item { position: relative; padding-bottom: 20px; }
+  .timeline-dot { position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px var(--line); background: var(--surface); }
+  .timeline-dot--done { background: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+  .timeline-dot--current { background: var(--surface); border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+  .timeline-date { font-size: 0.70rem; color: var(--muted); font-weight: 600; }
+  .timeline-title { font-size: 0.88rem; font-weight: 600; color: var(--ink); margin-top: 2px; }
+  .timeline-desc { font-size: 0.80rem; color: var(--muted); margin-top: 2px; }
+  /* Pending alerts */
+  .pending-list { display: flex; flex-direction: column; gap: 8px; }
+  .pending-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; font-size: 0.82rem; }
+  .pending-item--warning { background: var(--warning-bg); color: var(--warning); border: 1px solid #f0dfb5; }
+  .pending-item--success { background: var(--success-bg); color: var(--success); border: 1px solid #c8dfcc; }
+  .pending-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .progress-bar { height: 8px; background: var(--line-soft); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--bege)); border-radius: 999px; transition: width 0.8s ease; }
+  /* Overview */
+  .overview-entry { padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+  .overview-entry:last-child { border-bottom: none; }
+  .overview-date { font-size: 0.70rem; color: var(--muted); font-weight: 600; }
+  .overview-text { font-size: 0.85rem; color: var(--text); margin-top: 4px; line-height: 1.6; }
+  textarea.overview-input { width: 100%; min-height: 80px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 0.85rem; resize: vertical; margin-top: 8px; }
+  textarea.overview-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(114,80,71,0.12); }
+  @media (max-width: 768px) { .page { padding: 16px; } .client-header { flex-direction: column; text-align: center; } .tabs { overflow-x: auto; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <img src="../assets/images/logo-branca.png" alt="Resolutio" style="width:100%;max-width:180px;height:auto;object-fit:contain">
+    </div>
+    <nav class="sidebar__nav">
+      <div class="nav__label">Principal</div>
+      <a class="nav__item" href="./dashboard.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Dashboard</a>
+      <a class="nav__item" href="./leads.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h10M4 18h16"/></svg></span> Leads <span class="nav__badge">5</span></a>
+      <a class="nav__item nav__item--active" href="./clientes.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/></svg></span> Clientes</a>
+      <a class="nav__item" href="./funcionarios.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="7" r="3"/><path d="M16 11h4M19 9v4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4"/></svg></span> Equipe</a>
+      <div class="nav__label">Operação</div>
+      <a class="nav__item" href="./agendamento.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Agenda</a>
+      <a class="nav__item" href="./materiais.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 13H8M10 17H8M14 13h4M14 17h4"/></svg></span> Materiais</a>
+      <a class="nav__item" href="./financeiro.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg></span> Financeiro</a>
+      <a class="nav__item" href="./contratos.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span> Contratos</a>
+      <div class="nav__label">Sistema</div>
+      <a class="nav__item" href="../mentoria.html" target="_blank"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span> Link do Método</a>
+      <a class="nav__item" href="./config.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg></span> Configurações</a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user"><div class="user__avatar">BR</div><div class="user__name">Bruna Sirqueira</div><div class="user__email">admin@resolutio.com</div></div>
+      <button class="btn btn--danger btn--sm" style="width:100%;margin-top:10px" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('is-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div>
+          <div class="topbar__title" id="clientName">Carregando...</div>
+          <div class="topbar__subtitle">Página do cliente</div>
+        </div>
+      </div>
+      <div class="topbar__actions">
+        <a href="./clientes.html" class="btn btn--ghost btn--sm">← Voltar</a>
+      </div>
+    </header>
+
+    <div class="page">
+      <div class="client-header anim-up" id="clientHeader"></div>
+
+      <div class="tabs" id="tabsBar">
+        <button class="tab tab--active" onclick="switchTab('pendencias')">Pendências</button>
+        <button class="tab" onclick="switchTab('financeiro')">Financeiro</button>
+        <button class="tab" onclick="switchTab('contrato')">Contrato</button>
+        <button class="tab" onclick="switchTab('cronograma')">Cronograma</button>
+        <button class="tab" onclick="switchTab('materiais')">Materiais</button>
+        <button class="tab" onclick="switchTab('overview')">Overview</button>
+      </div>
+
+      <div class="tab-panel tab-panel--active" id="panel-pendencias"></div>
+      <div class="tab-panel" id="panel-financeiro"></div>
+      <div class="tab-panel" id="panel-contrato"></div>
+      <div class="tab-panel" id="panel-cronograma"></div>
+      <div class="tab-panel" id="panel-materiais"></div>
+      <div class="tab-panel" id="panel-overview"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  requireAuth(['admin']); setupSidebar();
+
+  const params = new URLSearchParams(window.location.search);
+  const clienteNome = params.get('id');
+  let clienteData = null;
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab--active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('tab-panel--active'));
+    event.target.classList.add('tab--active');
+    document.getElementById('panel-' + tab).classList.add('tab-panel--active');
+  }
+
+  function renderHeader() {
+    const c = clienteData;
+    const pacoteLabel = { excelencia: 'Excelência', estrategico: 'Estratégico', essencial: 'Essencial' };
+    const pilar = clientePilar(c);
+    document.getElementById('clientName').textContent = c.nome;
+    document.getElementById('clientHeader').innerHTML = `
+      <div class="client-avatar">${c.avatar}</div>
+      <div class="client-info" style="flex:1">
+        <h1>${c.nome}</h1>
+        <p>${c.email}</p>
+        <div class="client-meta">
+          <div class="client-meta-item">Pacote: <strong>${pacoteLabel[c.pacote] || c.pacote}</strong></div>
+          <div class="client-meta-item">Status: <strong>${labelForStatus(c.status)}</strong></div>
+          <div class="client-meta-item">Responsável: <strong>${c.funcionario || '—'}</strong></div>
+          <div class="client-meta-item">Próximo encontro: <strong>${formatDateTime(c.proximo_encontro)}</strong></div>
+          <div class="client-meta-item">Pilar: <strong style="color:var(--primary)">${pilarLabel(pilar)}</strong></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <label style="font-size:0.70rem;font-weight:700;color:rgba(255,255,255,0.5)">Mudar pilar:</label>
+          <select id="pilarSelect" onchange="changePilar()" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:0.82rem;font-family:var(--font-body)">
+            <option value="1" ${pilar===1?'selected':''}>Pilar 1 — Mapeamento</option>
+            <option value="2" ${pilar===2?'selected':''}>Pilar 2 — Arquitetura</option>
+            <option value="3" ${pilar===3?'selected':''}>Pilar 3 — Banca</option>
+            <option value="4" ${pilar===4?'selected':''}>Pilar 4 — Aprovação</option>
+          </select>
+        </div>
+        <div style="margin-top:16px;max-width:300px">
+          <div style="font-size:0.70rem;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:4px">Progresso</div>
+          <div class="progress-bar" style="background:rgba(255,255,255,0.15)"><div class="progress-fill" style="width:${pilarProgresso(pilar)}%"></div></div>
+          <div style="font-size:0.80rem;color:#fff;margin-top:4px;font-weight:600">${pilarProgresso(pilar)}% — ${pilarNome(pilar)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function changePilar() {
+    const val = parseInt(document.getElementById('pilarSelect').value);
+    if (val >= 1 && val <= 4) {
+      await API.clientes.update(clienteData.id, { pilar_atual: val });
+      clienteData.pilar_atual = val;
+      renderHeader();
+      toast('Pilar atualizado para ' + pilarLabel(val));
+    }
+  }
+
+  async function renderPendencias() {
+    const c = clienteData;
+    const [contratos, pagamentos, encontros, materiais] = await Promise.all([
+      API.contratos.list(), API.pagamentos.list(), API.encontros.list(), API.materiais.list()
+    ]);
+    let html = '<div class="section-card"><div class="section-card__title">Pendências</div><div class="pending-list">';
+
+    const ct = contratos.find(x => x.cliente === c.nome);
+    if (!ct) {
+      html += `<div class="pending-item pending-item--warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Contrato não criado — <a href="./contratos.html" style="font-weight:700;text-decoration:underline">Criar contrato</a></div>`;
+    } else if (ct.status === 'rascunho') {
+      html += `<div class="pending-item pending-item--warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Contrato em rascunho — <a href="./contratos.html" style="font-weight:700;text-decoration:underline">Enviar para assinatura</a></div>`;
+    } else if (ct.status === 'enviado') {
+      html += `<div class="pending-item pending-item--warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Contrato aguardando assinatura</div>`;
+    }
+
+    const pags = pagamentos.filter(x => x.cliente === c.nome);
+    const pendentes = pags.filter(p => p.status === 'pendente');
+    const atrasados = pags.filter(p => p.status === 'atrasado');
+    if (atrasados.length) {
+      html += `<div class="pending-item pending-item--warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8v5M12 16h.01"/><path d="M10.3 3.3L3 17a1 1 0 0 0 .9 1.5h16.2a1 1 0 0 0 .9-1.5L13.7 3.3a1 1 0 0 0-1.8 0z"/></svg>${atrasados.length} pagamento(s) em atraso — <a href="./financeiro.html" style="font-weight:700;text-decoration:underline">Ver financeiro</a></div>`;
+    } else if (pendentes.length) {
+      html += `<div class="pending-item pending-item--warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg>${pendentes.length} pagamento(s) pendente(s)</div>`;
+    }
+
+    const encontrosCliente = encontros.filter(x => x.cliente === c.nome);
+    if (!encontrosCliente.length) {
+      html += `<div class="pending-item pending-item--warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Nenhum encontro agendado — <a href="./agendamento.html" style="font-weight:700;text-decoration:underline">Agendar encontro</a></div>`;
+    }
+
+    const mats = materiais.filter(x => x.cliente === c.nome);
+    if (!mats.length) {
+      html += `<div class="pending-item pending-item--warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Nenhum material cadastrado — <a href="./materiais.html" style="font-weight:700;text-decoration:underline">Adicionar material</a></div>`;
+    }
+
+    if (ct && ct.status === 'assinado' && !atrasados.length && !pendentes.length && encontrosCliente.length && mats.length) {
+      html += `<div class="pending-item pending-item--success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>Tudo em dia! Nenhuma pendência encontrada.</div>`;
+    }
+
+    html += '</div></div>';
+    document.getElementById('panel-pendencias').innerHTML = html;
+  }
+
+  async function renderFinanceiro() {
+    const pagamentos = await API.pagamentos.list();
+    const pags = pagamentos.filter(x => x.cliente === clienteData.nome);
+    let html = '<div class="section-card"><div class="section-card__title">Financeiro</div>';
+    if (!pags.length) {
+      html += '<p style="color:var(--muted);font-size:0.85rem">Nenhum registro financeiro.</p>';
+    } else {
+      html += '<div class="table-wrap"><table><thead><tr><th>Valor</th><th>Parcela</th><th>Vencimento</th><th>Status</th></tr></thead><tbody>';
+      pags.forEach(p => {
+        html += `<tr><td><strong>${formatCurrency(p.valor)}</strong></td><td>${p.parcela_atual || 1}/${p.parcelas_total || 1}</td><td>${formatDate(p.vencimento)}</td><td><span class="badge ${badgeForStatus(p.status)}"><span class="badge-dot"></span>${labelForStatus(p.status)}</span></td></tr>`;
+      });
+      html += '</tbody></table></div>';
+      const total = pags.reduce((s,p)=>s+p.valor,0);
+      const recebido = pags.filter(p=>p.status==='pago').reduce((s,p)=>s+p.valor,0);
+      html += `<div style="margin-top:16px;display:flex;gap:24px;font-size:0.85rem"><div>Total: <strong>${formatCurrency(total)}</strong></div><div>Recebido: <strong style="color:var(--success)">${formatCurrency(recebido)}</strong></div><div>Restante: <strong>${formatCurrency(total-recebido)}</strong></div></div>`;
+    }
+    html += '</div>';
+    document.getElementById('panel-financeiro').innerHTML = html;
+  }
+
+  async function renderContrato() {
+    const contratos = await API.contratos.list();
+    const ct = contratos.find(x => x.cliente === clienteData.nome);
+    let html = '<div class="section-card"><div class="section-card__title">Contrato</div>';
+    if (!ct) {
+      html += '<p style="color:var(--muted);font-size:0.85rem">Nenhum contrato cadastrado.</p>';
+    } else {
+      html += `<div class="info-row"><span class="info-label">Valor</span><span class="info-value">${formatCurrency(ct.valor)}</span></div>`;
+      html += `<div class="info-row"><span class="info-label">Arquivo</span><span class="info-value">${ct.arquivo}</span></div>`;
+      html += `<div class="info-row"><span class="info-label">Enviado</span><span class="info-value">${formatDate(ct.enviado_em)}</span></div>`;
+      html += `<div class="info-row"><span class="info-label">Assinado</span><span class="info-value">${formatDate(ct.assinado_em)}</span></div>`;
+      html += `<div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge ${badgeForStatus(ct.status)}"><span class="badge-dot"></span>${labelForStatus(ct.status)}</span></span></div>`;
+    }
+    html += '</div>';
+    document.getElementById('panel-contrato').innerHTML = html;
+  }
+
+  async function renderCronograma() {
+    const encontros = await API.encontros.list();
+    const encontrosCliente = encontros.filter(x => x.cliente === clienteData.nome);
+    let html = '<div class="section-card"><div class="section-card__title">Cronograma de encontros</div>';
+    if (!encontrosCliente.length) {
+      html += '<p style="color:var(--muted);font-size:0.85rem">Nenhum encontro registrado.</p>';
+    } else {
+      html += '<div class="timeline">';
+      encontrosCliente.sort((a,b) => a.data.localeCompare(b.data)).forEach((e, i) => {
+        const isDone = e.status === 'realizado';
+        const isCancelled = e.status === 'cancelado';
+        const isLast = i === encontrosCliente.length - 1;
+        const dt = new Date(e.data.replace(' ','T'));
+        const pilarTag = e.pilar ? pilarLabel(e.pilar) : 'Não classificado';
+        const pilarBadgeColor = e.pilar ? 'badge--primary' : 'badge-neutral';
+        html += `<div class="timeline-item">
+          <div class="timeline-dot ${isDone ? 'timeline-dot--done' : isCancelled ? 'timeline-dot--cancelled' : isLast ? 'timeline-dot--current' : ''}"></div>
+          <div class="timeline-date">${dt.toLocaleDateString('pt-BR')} às ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+          <div class="timeline-title">${e.titulo}</div>
+          <div class="timeline-desc">${e.funcionario} · <span class="badge ${badgeForStatus(e.status)}" style="font-size:0.62rem"><span class="badge-dot"></span>${labelForStatus(e.status)}</span> · <span class="badge ${pilarBadgeColor}" style="font-size:0.62rem"><span class="badge-dot"></span>${pilarTag}</span></div>`;
+        if (!isDone && !isCancelled) {
+          html += `<div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <select id="pilarEncontro_${e.id}" style="padding:4px 8px;border-radius:6px;border:1px solid var(--line);font-size:0.75rem;font-family:var(--font-body);background:var(--surface)">
+              <option value="">Pilar...</option>
+              <option value="1" ${e.pilar===1?'selected':''}>Pilar 1 — Mapeamento</option>
+              <option value="2" ${e.pilar===2?'selected':''}>Pilar 2 — Arquitetura</option>
+              <option value="3" ${e.pilar===3?'selected':''}>Pilar 3 — Banca</option>
+              <option value="4" ${e.pilar===4?'selected':''}>Pilar 4 — Aprovação</option>
+            </select>
+            <button class="btn btn--primary" style="padding:5px 12px;font-size:0.72rem;border-radius:8px" onclick="marcarRealizado('${e.id}')">Marcar como realizado</button>
+            <button class="btn btn--ghost" style="padding:5px 12px;font-size:0.72rem;border-radius:8px;color:var(--danger)" onclick="cancelarEncontro('${e.id}')">Cancelar</button>
+          </div>`;
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    document.getElementById('panel-cronograma').innerHTML = html;
+  }
+
+  async function marcarRealizado(encontroId) {
+    const pilarSelect = document.getElementById('pilarEncontro_' + encontroId);
+    const pilarVal = pilarSelect ? parseInt(pilarSelect.value) || null : null;
+    const patch = { status: 'realizado' };
+    if (pilarVal) patch.pilar = pilarVal;
+    await API.encontros.update(encontroId, patch);
+    toast('Encontro marcado como realizado!');
+    renderCronograma();
+  }
+
+  async function cancelarEncontro(encontroId) {
+    if (!confirm('Tem certeza que deseja cancelar este encontro?')) return;
+    await API.encontros.update(encontroId, { status: 'cancelado' });
+    toast('Encontro cancelado');
+    renderCronograma();
+  }
+
+  async function renderMateriais() {
+    const materiais = await API.materiais.list();
+    const mats = materiais.filter(x => x.cliente === clienteData.nome);
+    const tipoLabel = { edital: 'Edital', projeto: 'Projeto', material_estudo: 'Material de estudo' };
+    let html = '<div class="section-card"><div class="section-card__title">Materiais</div>';
+    if (!mats.length) {
+      html += '<p style="color:var(--muted);font-size:0.85rem">Nenhum material cadastrado.</p>';
+    } else {
+      mats.forEach(m => {
+        html += `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-soft)">
+          <div style="width:40px;height:40px;border-radius:12px;background:var(--primary-50);border:1px solid var(--primary-200);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+          <div style="flex:1"><div style="font-weight:700;font-size:0.88rem;color:var(--ink)">${m.titulo}</div><div style="font-size:0.75rem;color:var(--muted)">${tipoLabel[m.tipo] || m.tipo} · ${formatDate(m.data)}</div></div>
+          <span style="font-size:0.72rem;color:var(--muted)">${m.arquivo}</span>
+        </div>`;
+      });
+    }
+    html += '</div>';
+    document.getElementById('panel-materiais').innerHTML = html;
+  }
+
+  async function renderOverview() {
+    const entries = await API.overview.list(clienteData.nome);
+    let html = '<div class="section-card"><div class="section-card__title">Overview do cliente</div>';
+    html += '<div style="margin-bottom:12px"><input type="text" class="form-control" id="overviewSearch" placeholder="Buscar no overview..." oninput="filterOverview()" style="font-size:0.82rem"></div>';
+    html += '<div id="overviewList">';
+    if (!entries.length) {
+      html += '<p style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">Nenhuma anotação registrada.</p>';
+    } else {
+      entries.sort((a,b) => b.data.localeCompare(a.data)).forEach((e, i) => {
+        html += `<div class="overview-entry" data-text="${e.texto.toLowerCase()}"><div style="display:flex;justify-content:space-between;align-items:center"><div class="overview-date">${formatDate(e.data)}</div><button class="action-btn action-btn--danger" onclick="removeOverview(${i})" style="font-size:0.68rem;padding:3px 6px">✕</button></div><div class="overview-text">${e.texto}</div></div>`;
+      });
+    }
+    html += '</div>';
+    html += '<div style="margin-top:16px"><textarea class="overview-input" id="overviewInput" placeholder="Adicionar anotação sobre este cliente..."></textarea><div style="margin-top:8px;display:flex;justify-content:flex-end"><button class="btn btn--primary btn--sm" onclick="saveOverview()">Salvar anotação</button></div></div>';
+    html += '</div>';
+    document.getElementById('panel-overview').innerHTML = html;
+  }
+
+  function filterOverview() {
+    const query = document.getElementById('overviewSearch')?.value.toLowerCase() || '';
+    document.querySelectorAll('.overview-entry').forEach(el => {
+      const text = el.getAttribute('data-text') || '';
+      el.style.display = text.includes(query) ? '' : 'none';
+    });
+  }
+
+  async function saveOverview() {
+    const texto = document.getElementById('overviewInput').value.trim();
+    if (!texto) return;
+    await API.overview.create(clienteData.nome, texto);
+    document.getElementById('overviewInput').value = '';
+    toast('Anotação salva!');
+    renderOverview();
+  }
+
+  async function removeOverview(index) {
+    if (!confirm('Remover esta anotação?')) return;
+    await API.overview.remove(clienteData.nome, index);
+    toast('Anotação removida!');
+    renderOverview();
+  }
+
+  function toast(msg, type='success') {
+    const c = document.getElementById('toastContainer') || document.body;
+    const el = document.createElement('div');
+    const bg = type==='success' ? '#10B981' : type==='error' ? '#EF4444' : '#3B82F6';
+    el.style.cssText = `position:fixed;top:20px;right:20px;z-index:300;background:${bg};color:white;padding:12px 18px;border-radius:10px;font-size:0.85rem;box-shadow:0 8px 24px rgba(0,0,0,0.15);animation:slideIn 0.2s ease;font-family:var(--font-body)`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all 0.3s'; setTimeout(()=>el.remove(),300); }, 3000);
+  }
+
+  async function load() {
+    if (!clienteNome) { document.getElementById('clientName').textContent = 'Cliente não encontrado'; return; }
+    const clientes = await API.clientes.list();
+    clienteData = clientes.find(c => c.nome === clienteNome);
+    if (!clienteData) { document.getElementById('clientName').textContent = 'Cliente não encontrado'; return; }
+    renderHeader();
+    renderPendencias();
+    renderFinanceiro();
+    renderContrato();
+    renderCronograma();
+    renderMateriais();
+    renderOverview();
+    document.querySelectorAll('.anim-up').forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight) el.classList.add('is-visible');
+    });
+  }
+  load();
+</script>
+</body>
+</html>

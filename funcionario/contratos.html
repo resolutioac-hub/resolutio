@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contratos (Administrativo) — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  body { font-family: var(--font-body); background: linear-gradient(170deg, #fcfaf6 0%, #f4efe8 100%); color: #1a1715; overflow-x: hidden; }
+  .sidebar { width: 260px; background: linear-gradient(180deg, #fff 0%, #fdfaf7 100%); border-right: 1px solid var(--line); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; box-shadow: 6px 0 20px rgba(30,21,19,0.04); }
+  .sidebar__brand { padding: 28px 22px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .nav__label { font-family: var(--font-body); font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 18px 14px 8px; }
+  .nav__item { color: var(--text); font-size: 0.82rem; padding: 10px 14px; border-radius: 10px; transition: background 150ms ease; display: flex; align-items: center; gap: 10px; }
+  .nav__item:hover { background: var(--primary-50); color: var(--primary-700); }
+  .nav__item--active { background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(114,80,71,0.25); }
+  .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+  .nav__icon svg { width: 16px; height: 16px; }
+  .sidebar__footer { padding: 16px; border-top: 1px solid var(--line-soft); }
+  .user { background: rgba(255,255,255,0.8); border-radius: 14px; padding: 12px; border: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .user__avatar { background: linear-gradient(135deg, var(--primary), var(--primary-700)); box-shadow: 0 4px 12px rgba(114,80,71,0.25); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.72rem; color: #fff; }
+  .user__name { color: var(--ink); font-weight: 600; font-size: 0.80rem; }
+  .user__email { color: var(--muted); font-size: 0.66rem; }
+  .main { flex: 1; margin-left: 260px; min-height: 100vh; }
+  .topbar { height: 72px; background: rgba(255,255,255,0.75); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(30,21,19,0.06); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 50; }
+  .topbar__title { font-family: var(--font-body); font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+  .topbar__subtitle { font-size: 0.80rem; color: var(--muted); }
+  .page { padding: 28px 32px; max-width: 1180px; width: 100%; margin: 0 auto; }
+  .section-card { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); margin-bottom: 20px; }
+  .section-card__title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 400; color: var(--ink); margin-bottom: 16px; }
+  .contract-card { background: #fff; border: 1px solid var(--line-soft); border-radius: 14px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+  .badge--success { background: #ecfdf5; color: #10b981; }
+  .badge--warning { background: #fffbeb; color: #d97706; }
+  .badge--info { background: #eef2ff; color: #465fff; }
+  .upload-box { background: var(--primary-50); border: 1.5px dashed var(--primary-200); border-radius: 12px; padding: 16px; margin-top: 10px; }
+  @media (max-width: 768px) { .main { margin-left: 0; } .sidebar { display: none; } .sidebar.is-open { display: flex; } .page { padding: 16px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <img src="../assets/images/logo-branca.png" alt="Resolutio" style="width:100%;max-width:180px;height:auto;object-fit:contain">
+    </div>
+    <nav class="sidebar__nav" id="dynamicNav"></nav>
+    <div class="sidebar__footer">
+      <div class="user"><div class="user__avatar" id="userAvatar">FU</div><div><div class="user__name" id="userName">Administrativo</div><div class="user__email" id="userEmail">admin@resolutio.com</div></div></div>
+      <button class="btn btn--danger btn--sm" style="width:100%;margin-top:10px" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('is-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div>
+          <div class="topbar__title">Gestão de Contratos e Importação em PDF</div>
+          <div class="topbar__subtitle">Importe contratos em PDF, envie para o cliente assinar via WhatsApp e acompanhe a assinatura</div>
+        </div>
+      </div>
+      <button class="btn btn--primary btn--sm" onclick="openModal('newContractModal')">+ Importar / Novo Contrato PDF</button>
+    </header>
+
+    <div class="page">
+      <div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px 20px;display:flex;gap:16px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+        <span style="font-weight:700;font-size:0.85rem;color:var(--ink)">Funções de Contrato:</span>
+        <span class="badge badge--info">📄 Importar Arquivo PDF</span>
+        <span class="badge badge--warning">📲 Enviar PDF via WhatsApp / E-mail</span>
+        <span class="badge badge--success">✍️ Confirmar Assinatura do Cliente</span>
+      </div>
+
+      <div class="section-card">
+        <h2 class="section-card__title">Contratos dos Clientes</h2>
+        <div id="contratosList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Elaborar / Importar Contrato PDF -->
+<div class="modal-overlay" id="newContractModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header"><h3>Importar Contrato PDF para Cliente</h3><button class="modal-close" onclick="closeModal('newContractModal')" aria-label="Fechar">×</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="contractClient">Cliente</label>
+        <select id="contractClient" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label for="contractPacote">Pacote / Serviço contratado</label>
+        <select id="contractPacote" class="form-control">
+          <option value="Mentoria de TCC / Artigo — Essencial">Mentoria de TCC / Artigo — Essencial (R$ 2.500,00)</option>
+          <option value="Mentoria Acadêmica — Estratégico">Mentoria Acadêmica — Estratégico (R$ 4.800,00)</option>
+          <option value="Mentoria de Mestrado / Doutorado — Excelência">Mentoria de Mestrado / Doutorado — Excelência (R$ 8.500,00)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="contractValor">Valor Total do Contrato (R$)</label>
+        <input id="contractValor" class="form-control" type="number" step="0.01" placeholder="2500.00">
+      </div>
+
+      <!-- Importar PDF -->
+      <div class="upload-box">
+        <label for="contractPdfFile" style="font-weight:700;color:var(--primary);display:block;margin-bottom:6px">📄 Selecionar Arquivo do Contrato (PDF)</label>
+        <input type="file" id="contractPdfFile" class="form-control" accept="application/pdf" onchange="handlePdfUpload(this)">
+        <div id="pdfUploadStatus" style="font-size:0.78rem;color:var(--muted);margin-top:6px">Nenhum arquivo PDF selecionado.</div>
+      </div>
+
+      <div class="form-group" style="margin-top:14px">
+        <label for="contractClausulas">Observações ou Link Externo do PDF (Opcional)</label>
+        <textarea id="contractClausulas" class="form-control" rows="3" placeholder="Insira informações adicionais ou cole o link do Google Drive/Docusign..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost" onclick="closeModal('newContractModal')">Cancelar</button>
+      <button class="btn btn--primary" onclick="createContract()">Salvar & Liberar para Assinatura</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="./funcionario-nav.js"></script>
+<script>
+  requireAuth(['funcionario']); setupSidebar(); renderFuncionarioNav('contratos');
+
+  let allContratos = [];
+  let allClientes = [];
+  let uploadedPdfData = null;
+  let uploadedPdfName = null;
+
+  function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+  function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+  async function load() {
+    allClientes = await API.clientes.list();
+    allContratos = await API.contratos.list();
+
+    const clientSelect = document.getElementById('contractClient');
+    clientSelect.innerHTML = allClientes.map(c => `<option value="${c.nome}">${c.nome} (${c.email || 'sem e-mail'})</option>`).join('');
+
+    renderContratos();
+  }
+
+  function handlePdfUpload(input) {
+    const file = input.files[0];
+    const status = document.getElementById('pdfUploadStatus');
+    if (!file) {
+      uploadedPdfData = null;
+      uploadedPdfName = null;
+      status.textContent = 'Nenhum arquivo PDF selecionado.';
+      return;
+    }
+
+    if (file.type !== 'application/pdf') {
+      toast('Por favor, selecione um arquivo em formato PDF.', 'error');
+      input.value = '';
+      return;
+    }
+
+    uploadedPdfName = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      uploadedPdfData = e.target.result;
+      status.innerHTML = `<strong style="color:#10b981">✓ Arquivo carregado: ${file.name} (${(file.size/1024).toFixed(1)} KB)</strong>`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function renderContratos() {
+    const list = document.getElementById('contratosList');
+    if (!allContratos.length) {
+      list.innerHTML = '<p style="color:var(--muted);text-align:center;padding:30px 0">Nenhum contrato cadastrado.</p>';
+      return;
+    }
+
+    list.innerHTML = allContratos.map(c => {
+      const isSigned = c.status === 'assinado';
+      const isSent = c.status === 'enviado';
+      const badgeClass = isSigned ? 'badge--success' : isSent ? 'badge--warning' : 'badge--info';
+      const badgeText = isSigned ? 'Assinado' : isSent ? 'Aguardando Assinatura' : 'PDF Importado / Rascunho';
+
+      const client = allClientes.find(cl => cl.nome === c.cliente);
+      const phone = client?.whatsapp || client?.telefone || '';
+      const cleanPhone = phone.replace(/\D/g, '');
+
+      const msgText = `Olá, ${c.cliente}! Segue o seu contrato de mentoria para leitura e assinatura digital:\n📌 *${c.pacote || 'Contrato Resolutio Mentoria'}*\n\nPor favor, confirme a leitura e aceite para darmos início ao acompanhamento!`;
+      const whatsUrl = cleanPhone ? `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msgText)}` : '#';
+
+      return `
+      <div class="contract-card">
+        <div style="flex:1;min-width:260px">
+          <div style="font-weight:700;font-size:1.05rem;color:var(--ink)">${c.pacote || 'Contrato de Mentoria'}</div>
+          <div style="font-size:0.82rem;color:var(--muted);margin-top:2px">
+            Cliente: <strong>${c.cliente}</strong> · Valor: R$ ${(c.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}
+          </div>
+          <div style="font-size:0.75rem;color:var(--primary);font-weight:600;margin-top:4px">
+            📄 PDF: ${c.pdf_nome || 'Contrato-Mentoria.pdf'} ${c.pdf_data ? ' (Pronto para abertura)' : ''}
+          </div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">
+            Criado em: ${formatDate(c.data_criacao || new Date().toISOString())}
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="badge ${badgeClass}">${badgeText}</span>
+
+          ${c.pdf_data ? `<button class="btn btn--ghost btn--sm" onclick="openPdfData('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Ver PDF</button>` : ''}
+
+          ${cleanPhone && !isSigned ? `<a href="${whatsUrl}" target="_blank" onclick="markSent('${c.id}')" class="btn btn--ghost btn--sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Enviar WhatsApp</a>` : ''}
+
+          ${!isSigned ? `<button class="btn btn--success btn--sm" onclick="markSigned('${c.id}')">✍️ Marcar Assinado</button>` : `<button class="btn btn--ghost btn--sm" style="color:#10b981;font-weight:700">✓ Assinado</button>`}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function openPdfData(id) {
+    const c = allContratos.find(x => x.id === id);
+    if (!c || !c.pdf_data) return toast('Arquivo PDF não disponível.', 'error');
+    
+    // Abrir o PDF em DataURL em nova aba
+    const win = window.open();
+    if (win) {
+      win.document.write(`<iframe src="${c.pdf_data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+    } else {
+      toast('Permita pop-ups no seu navegador para visualizar o PDF.', 'warning');
+    }
+  }
+
+  async function createContract() {
+    const cliente = document.getElementById('contractClient').value;
+    const pacote = document.getElementById('contractPacote').value;
+    const valor = parseFloat(document.getElementById('contractValor').value) || 2500;
+    const observacoes = document.getElementById('contractClausulas').value.trim();
+
+    if (!cliente) return toast('Selecione um cliente.', 'error');
+
+    try {
+      await API.contratos.create({
+        cliente,
+        pacote,
+        valor,
+        observacoes,
+        pdf_nome: uploadedPdfName || `${cliente.replace(/\s+/g,'_')}_Contrato.pdf`,
+        pdf_data: uploadedPdfData || null,
+        status: 'rascunho',
+        data_criacao: new Date().toISOString()
+      });
+
+      closeModal('newContractModal');
+      uploadedPdfData = null;
+      uploadedPdfName = null;
+      document.getElementById('contractPdfFile').value = '';
+      document.getElementById('pdfUploadStatus').textContent = 'Nenhum arquivo PDF selecionado.';
+
+      toast('Contrato PDF importado com sucesso!', 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function markSent(id) {
+    try {
+      await API.contratos.update(id, { status: 'enviado', enviado_em: new Date().toISOString() });
+      load();
+    } catch (e) {}
+  }
+
+  async function markSigned(id) {
+    try {
+      await API.contratos.update(id, { status: 'assinado', assinado_em: new Date().toISOString() });
+      toast('Contrato confirmado como ASSINADO pelo cliente!', 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  load();
+</script>
+</body>
+</html>

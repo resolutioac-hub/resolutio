@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clientes — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  body { font-family: var(--font-body); background: linear-gradient(170deg, #fcfaf6 0%, #f4efe8 100%); color: #1a1715; overflow-x: hidden; }
+  .sidebar { width: 200px; background: linear-gradient(180deg, #1a1715 0%, #100e0c 100%); border-right: 1px solid var(--line); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; box-shadow: 6px 0 20px rgba(30,21,19,0.04); }
+  .sidebar__brand { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; }
+  .sidebar__logo { width: 44px; height: 44px; border-radius: 50%; background: var(--primary-50); border: 1px solid var(--primary-200); padding: 2px; margin-bottom: 12px; }
+  .sidebar__logo img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .sidebar__title { font-family: var(--font-body); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.15em; color: #fff; text-transform: uppercase; text-align: center; width: 100%; }
+  .nav__label { font-family: var(--font-body); font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 18px 14px 8px; }
+  .nav__item { color: var(--text); font-size: 0.82rem; padding: 10px 14px; border-radius: 10px; transition: background 150ms ease; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav__item:hover { background: var(--primary-50); color: var(--primary-700); }
+  .nav__item--active { background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(114,80,71,0.25); }
+  .nav__badge { background: var(--bege); color: var(--primary-700); }
+  .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+  .nav__icon svg { width: 16px; height: 16px; }
+  .sidebar__footer { padding: 16px; border-top: 1px solid var(--line-soft); }
+  .user { background: rgba(255,255,255,0.8); border-radius: 14px; padding: 12px; border: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .user__avatar { background: linear-gradient(135deg, var(--primary), var(--primary-700)); box-shadow: 0 4px 12px rgba(114,80,71,0.25); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.72rem; color: #fff; }
+  .user__name { color: var(--ink); font-weight: 600; font-size: 0.80rem; }
+  .user__email { color: var(--muted); font-size: 0.66rem; }
+  .main { flex: 1; margin-left: 200px; min-height: 100vh; }
+  .topbar { height: 56px; background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 50; }
+  .topbar__title { font-family: var(--font-body); font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+  .topbar__subtitle { font-size: 0.80rem; color: var(--muted); }
+  .topbar__actions { display: flex; gap: 8px; align-items: center; }
+  .page { padding: 28px 32px; max-width: 1260px; width: 100%; margin: 0 auto; }
+  @keyframes riseUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-up { opacity: 0; transform: translateY(28px); }
+  .anim-up.is-visible { animation: riseUp 0.9s cubic-bezier(0.22,1,0.36,1) both; }
+  /* KPIs */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 18px 20px; box-shadow: 0 4px 16px rgba(30,21,19,0.04); transition: transform 200ms; }
+  .kpi:hover { transform: translateY(-2px); }
+  .kpi__label { font-size: 0.60rem; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--muted); }
+  .kpi__value { font-family: var(--font-display); font-size: 1.6rem; font-weight: 300; color: var(--ink); margin-top: 6px; letter-spacing: -0.03em; }
+  .kpi__meta { font-size: 0.70rem; color: var(--muted); margin-top: 4px; }
+  /* Filters */
+  .filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .filter-group { display: flex; gap: 6px; align-items: center; }
+  .filter-group select, .filter-group input { padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 0.80rem; font-family: inherit; color: var(--ink); background: #fff; transition: border-color 150ms; }
+  .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(114,80,71,0.12); }
+  .filter-label { font-size: 0.70rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .search-box { position: relative; }
+  .search-box input { padding-left: 36px; min-width: 280px; }
+  .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); }
+  /* Client Card */
+  .cliente-card { background: #fff; border: 1.5px solid var(--line); border-radius: 18px; padding: 20px; box-shadow: 0 6px 20px rgba(30,21,19,0.04); transition: transform 200ms, box-shadow 200ms; cursor: pointer; position: relative; overflow: hidden; }
+  .cliente-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(114,80,71,0.10); }
+  .cliente-card__top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .cliente-card__avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #5e3d2a); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78rem; flex-shrink: 0; }
+  .cliente-card__name { font-size: 0.95rem; font-weight: 700; color: var(--ink); }
+  .cliente-card__email { font-size: 0.72rem; color: var(--muted); }
+  .cliente-card__badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .cliente-card__row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-top: 1px solid var(--line-soft); font-size: 0.78rem; }
+  .cliente-card__row span:first-child { color: var(--muted); }
+  .cliente-card__row strong { color: var(--ink); font-weight: 700; }
+  .progress-bar { width: 100%; height: 5px; background: var(--line-soft); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 999px; transition: width 0.8s ease; }
+  .pendencias-list { margin-top: 8px; }
+  .pendencia-item { display: flex; align-items: center; gap: 6px; font-size: 0.70rem; color: var(--warning); font-weight: 600; padding: 3px 0; }
+  .pendencia-item svg { width: 12px; height: 12px; flex-shrink: 0; }
+  .grid-clientes { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  /* Status indicators */
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .status-dot--ok { background: var(--success); }
+  .status-dot--warn { background: var(--warning); }
+  .status-dot--danger { background: var(--danger); }
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(30,21,19,0.42); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 20px; width: 100%; max-width: 680px; max-height: 90vh; overflow: hidden; box-shadow: 0 32px 80px rgba(30,21,19,0.25); border: 1px solid var(--line); display: flex; flex-direction: column; }
+  .modal-header { padding: 18px 24px; border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 400; color: var(--ink); }
+  .modal-close { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--line-soft); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); transition: all 150ms; }
+  .modal-close:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
+  .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--line-soft); display: flex; justify-content: flex-end; gap: 8px; background: #fdfcfa; }
+  /* Detail sections */
+  .detail-section { margin-bottom: 20px; }
+  .detail-section__title { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .detail-item { background: var(--line-soft); border-radius: 10px; padding: 12px; }
+  .detail-item__label { font-size: 0.66rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .detail-item__value { font-size: 0.88rem; font-weight: 700; color: var(--ink); margin-top: 4px; }
+  .timeline-mini { position: relative; padding-left: 18px; }
+  .timeline-mini::before { content: ''; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
+  .timeline-mini__item { position: relative; padding-bottom: 12px; font-size: 0.78rem; }
+  .timeline-mini__dot { position: absolute; left: -18px; top: 3px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px var(--line); background: var(--surface); }
+  .timeline-mini__dot--done { background: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+  .timeline-mini__dot--current { background: var(--surface); border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+  @media (max-width: 980px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } .grid-clientes { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } .page { padding: 16px; } .filters { flex-direction: column; align-items: stretch; } .search-box input { min-width: auto; width: 100%; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <img src="../assets/images/logo-branca.png" alt="Resolutio" style="width:100%;max-width:180px;height:auto;object-fit:contain">
+    </div>
+    <nav class="sidebar__nav">
+      <div class="nav__label">Principal</div>
+      <a class="nav__item" href="./dashboard.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Dashboard</a>
+      <a class="nav__item" href="./leads.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h10M4 18h16"/></svg></span> Leads <span class="nav__badge">5</span></a>
+      <a class="nav__item nav__item--active" href="./clientes.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/></svg></span> Clientes</a>
+      <a class="nav__item" href="./funcionarios.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="7" r="3"/><path d="M16 11h4M19 9v4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4"/></svg></span> Equipe</a>
+      <div class="nav__label">Operação</div>
+      <a class="nav__item" href="./agendamento.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Agenda</a>
+      <a class="nav__item" href="./materiais.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 13H8M10 17H8M14 13h4M14 17h4"/></svg></span> Materiais</a>
+      <a class="nav__item" href="./financeiro.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg></span> Financeiro</a>
+      <a class="nav__item" href="./contratos.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span> Contratos</a>
+      <div class="nav__label">Sistema</div>
+      <a class="nav__item" href="./config.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg></span> Configurações</a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user"><div class="user__avatar">BR</div><div class="user__name">Bruna Sirqueira</div><div class="user__email">admin@resolutio.com</div></div>
+      <button class="btn btn--danger btn--sm" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('is-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div>
+          <div class="topbar__title">Clientes</div>
+          <div class="topbar__subtitle">Gestão completa de clientes ativos</div>
+        </div>
+      </div>
+      <div class="topbar__actions">
+        <span id="clientesCount" style="font-size:0.82rem;color:var(--muted)"></span>
+        <button class="btn btn--primary btn--sm" onclick="openModal('newClientModal');populateDiaVencimento('newClientDiaVencimento');updatePackageValue()">Novo cliente</button>
+      </div>
+    </header>
+
+    <div class="page">
+      <!-- KPIs -->
+      <div class="kpi-row anim-up">
+        <div class="kpi"><div class="kpi__label">Total Clientes</div><div class="kpi__value" id="kpiTotal">—</div><div class="kpi__meta" id="kpiTotalMeta">ativos</div></div>
+        <div class="kpi"><div class="kpi__label">Ticket Médio</div><div class="kpi__value" id="kpiTicket">—</div><div class="kpi__meta">por contrato</div></div>
+        <div class="kpi"><div class="kpi__label">Com Pendências</div><div class="kpi__value" id="kpiPendencias" style="color:var(--warning)">—</div><div class="kpi__meta">requer atenção</div></div>
+        <div class="kpi"><div class="kpi__label">Progresso Médio</div><div class="kpi__value" id="kpiProgresso">—</div><div class="kpi__meta">jornada MAPP</div></div>
+        <div class="kpi"><div class="kpi__label">Pacote Mais Vendido</div><div class="kpi__value" id="kpiPacote" style="font-size:1.1rem">—</div><div class="kpi__meta" id="kpiPacoteMeta">—</div></div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters anim-up" style="animation-delay:0.1s">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" class="form-control" id="searchInput" placeholder="Buscar cliente..." oninput="renderClientes()">
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Status:</span>
+          <select id="filterStatus" onchange="renderClientes()">
+            <option value="">Todos</option>
+            <option value="ativo">Ativo</option>
+            <option value="pausado">Pausado</option>
+            <option value="concluido">Concluído</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Pacote:</span>
+          <select id="filterPacote" onchange="renderClientes()">
+            <option value="">Todos</option>
+            <option value="excelencia">Excelência</option>
+            <option value="estrategico">Estratégico</option>
+            <option value="essencial">Essencial</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Pendência:</span>
+          <select id="filterPendencia" onchange="renderClientes()">
+            <option value="">Todas</option>
+            <option value="pagamento">Pagamento</option>
+            <option value="contrato">Contrato</option>
+            <option value="nenhuma">Sem pendências</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Client Grid -->
+      <div class="grid-clientes" id="clientesGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="newClientModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Novo cliente</h3><button class="modal-close" onclick="closeModal('newClientModal')" aria-label="Fechar">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label for="newClientName">Nome completo</label><input id="newClientName" class="form-control"></div>
+      <div class="form-group"><label for="newClientEmail">E-mail</label><input id="newClientEmail" class="form-control" type="email"></div>
+      <div class="form-group"><label for="newClientWhats">WhatsApp</label><input id="newClientWhats" class="form-control" inputmode="numeric" placeholder="(99) 99999-9999" oninput="this.value=formatPhoneBR(this.value)"></div>
+      <div class="form-group"><label for="newClientCpf">CPF</label><input id="newClientCpf" class="form-control" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=formatCPF(this.value)"></div>
+      <div class="form-group"><label for="newClientPackage">Pacote</label><select id="newClientPackage" class="form-control" onchange="updatePackageValue()"><option value="essencial">Essencial</option><option value="estrategico">Estratégico</option><option value="excelencia">Excelência</option></select></div>
+      <div class="form-group"><label for="newClientMeioPagamento">Meio de pagamento</label><select id="newClientMeioPagamento" class="form-control" onchange="updatePackageValue()"><option value="pix">PIX</option><option value="cartao">Cartão (crédito)</option></select></div>
+      <div class="form-group" id="newClientTipoRow"><label for="newClientTipoPagamento">Tipo</label><select id="newClientTipoPagamento" class="form-control" onchange="updatePackageValue()"><option value="avista">À vista</option><option value="parcelado_pix">Parcelado no PIX</option></select></div>
+      <div class="form-group" id="newClientParcelasRow" style="display:none"><label for="newClientQtdParcelas">Número de parcelas</label><select id="newClientQtdParcelas" class="form-control" onchange="updatePackageValue()"><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="5">5x</option><option value="6" selected>6x</option><option value="8">8x</option><option value="10">10x</option><option value="12">12x</option></select></div>
+      <div class="form-group" id="newClientDiaRow" style="display:none"><label for="newClientDiaVencimento">Dia de vencimento</label><select id="newClientDiaVencimento" class="form-control" onchange="updatePackageValue()"></select></div>
+      <div class="form-group"><label for="newClientValor">Valor total</label><input id="newClientValor" class="form-control" readonly style="background:#f4efe8;font-weight:700;color:var(--primary)"></div>
+      <div class="form-group"><label for="newClientParcelaMensal">Parcela mensal</label><input id="newClientParcelaMensal" class="form-control" readonly style="background:#f4efe8"></div>
+      <div class="form-group">
+        <label for="newClientEntrada">Valor de Entrada (R$)</label>
+        <input id="newClientEntrada" class="form-control" type="number" step="0.01" placeholder="Ex: 500.00 (opcional)">
+        <small style="color:var(--muted);font-size:0.75rem">Se informado, este valor consta automaticamente no financeiro como receita paga hoje.</small>
+      </div>
+      <div class="form-group"><label for="newClientResponsible">Colaborador responsável</label><select id="newClientResponsible" class="form-control"></select></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('newClientModal')">Cancelar</button><button class="btn btn--primary" onclick="createClient()">Cadastrar cliente</button></div>
+  </div>
+</div>
+
+<!-- Modal: Detalhes do Cliente -->
+<div class="modal-overlay" id="modalCliente">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalClienteTitle">Detalhes do Cliente</h3>
+      <button class="modal-close" onclick="closeModal('modalCliente')">✕</button>
+    </div>
+    <div class="modal-body" id="modalClienteBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost btn--sm" onclick="closeModal('modalCliente')">Fechar</button>
+      <button class="btn btn--secondary btn--sm" id="modalClienteEditBtn"><i class="fas fa-pen" style="margin-right:4px"></i> Editar</button>
+      <button class="btn btn--primary btn--sm" id="modalClienteAction">Ver completo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar Cliente -->
+<div class="modal-overlay" id="editClientModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Editar cliente</h3><button class="modal-close" onclick="closeModal('editClientModal')" aria-label="Fechar">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="editClientId">
+      <div class="form-group"><label for="editClientName">Nome completo</label><input id="editClientName" class="form-control"></div>
+      <div class="form-group"><label for="editClientEmail">E-mail</label><input id="editClientEmail" class="form-control" type="email"></div>
+      <div class="form-group"><label for="editClientWhats">WhatsApp</label><input id="editClientWhats" class="form-control" inputmode="numeric" placeholder="(99) 99999-9999" oninput="this.value=formatPhoneBR(this.value)"></div>
+      <div class="form-group"><label for="editClientCpf">CPF</label><input id="editClientCpf" class="form-control" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=formatCPF(this.value)"></div>
+      <div class="form-group"><label for="editClientPackage">Pacote</label><select id="editClientPackage" class="form-control" onchange="updateEditPackageValue()"><option value="essencial">Essencial</option><option value="estrategico">Estratégico</option><option value="excelencia">Excelência</option></select></div>
+      <div class="form-group"><label for="editClientMeioPagamento">Meio de pagamento</label><select id="editClientMeioPagamento" class="form-control" onchange="updateEditPackageValue()"><option value="pix">PIX</option><option value="cartao">Cartão (crédito)</option></select></div>
+      <div class="form-group" id="editClientTipoRow"><label for="editClientTipoPagamento">Tipo</label><select id="editClientTipoPagamento" class="form-control" onchange="updateEditPackageValue()"><option value="avista">À vista</option><option value="parcelado_pix">Parcelado no PIX</option></select></div>
+      <div class="form-group" id="editClientParcelasRow" style="display:none"><label for="editClientQtdParcelas">Número de parcelas</label><select id="editClientQtdParcelas" class="form-control" onchange="updateEditPackageValue()"><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="5">5x</option><option value="6">6x</option><option value="8">8x</option><option value="10">10x</option><option value="12">12x</option></select></div>
+      <div class="form-group" id="editClientDiaRow" style="display:none"><label for="editClientDiaVencimento">Dia de vencimento</label><select id="editClientDiaVencimento" class="form-control" onchange="updateEditPackageValue()"></select></div>
+      <div class="form-group"><label for="editClientValor">Valor total</label><input id="editClientValor" class="form-control" readonly style="background:#f4efe8;font-weight:700;color:var(--primary)"></div>
+      <div class="form-group"><label for="editClientParcelaMensal">Parcela mensal</label><input id="editClientParcelaMensal" class="form-control" readonly style="background:#f4efe8"></div>
+      <div class="form-group"><label for="editClientStatus">Status</label><select id="editClientStatus" class="form-control"><option value="ativo">Ativo</option><option value="pausado">Pausado</option><option value="concluido">Concluído</option></select></div>
+      <div class="form-group"><label for="editClientPilar">Pilar atual</label><select id="editClientPilar" class="form-control"><option value="1">1 — Mapeamento</option><option value="2">2 — Arquitetura</option><option value="3">3 — Banca</option><option value="4">4 — Aprovação</option></select></div>
+      <div class="form-group"><label for="editClientResponsible">Colaborador responsável</label><select id="editClientResponsible" class="form-control"></select></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('editClientModal')">Cancelar</button><button class="btn btn--primary" onclick="saveClientEdit()">Salvar alterações</button></div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:10px;"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  requireAuth(['admin']); setupSidebar();
+
+  let allClientes = [];
+  let allPagamentos = [];
+  let allContratos = [];
+  let allEncontros = [];
+  let allFuncs = [];
+
+  // Toast
+  function toast(msg, type='success') {
+    const c = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    const bg = type==='success' ? '#10B981' : type==='error' ? '#EF4444' : '#3B82F6';
+    el.style.cssText = `background:${bg};color:white;padding:12px 18px;border-radius:10px;font-size:0.85rem;box-shadow:0 8px 24px rgba(0,0,0,0.15);animation:slideIn 0.2s ease;font-family:var(--font-body)`;
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all 0.3s'; setTimeout(()=>el.remove(),300); }, 3000);
+  }
+
+  // Pacotes e valores
+  const PACOTES_VALORES = {
+    essencial: { avista: 1085.46, '6x': 1085.46, '8x': 1085.46 },
+    estrategico: { avista: 1447.00, '6x': 1447.00, '8x': 1447.00 },
+    excelencia: { avista: 2170.00, '6x': 2170.00, '8x': 2170.00 }
+  };
+  const PARCELA_VALOR = {
+    essencial: { '6x': 200.28, '8x': 156.71 },
+    estrategico: { '6x': 266.99, '8x': 208.91 },
+    excelencia: { '6x': 400.38, '8x': 313.30 }
+  };
+  const PACOTE_LABEL = { essencial:'Essencial', estrategico:'Estratégico', excelencia:'Excelência' };
+
+  function populateDiaVencimento(selectId){
+    const sel = document.getElementById(selectId);
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Selecione o dia...</option>' + Array.from({length:28},(_,i)=>i+1).map(d=>`<option value="${d}" ${d==current?'selected':''}>Dia ${d}</option>`).join('');
+  }
+
+  function updatePackageValue(){
+    const pacote = document.getElementById('newClientPackage').value;
+    const meio = document.getElementById('newClientMeioPagamento').value;
+    const tipo = document.getElementById('newClientTipoPagamento').value;
+    const qtd = document.getElementById('newClientQtdParcelas').value;
+    const dia = document.getElementById('newClientDiaVencimento').value;
+    const valorEl = document.getElementById('newClientValor');
+    const parcelaEl = document.getElementById('newClientParcelaMensal');
+    const tipoRow = document.getElementById('newClientTipoRow');
+    const parcelasRow = document.getElementById('newClientParcelasRow');
+    const diaRow = document.getElementById('newClientDiaRow');
+
+    if(meio === 'cartao'){
+      tipoRow.style.display = 'none';
+      parcelasRow.style.display = 'none';
+      diaRow.style.display = 'none';
+      const total = PACOTES_VALORES[pacote].avista;
+      valorEl.value = 'R$ ' + total.toFixed(2).replace('.',',');
+      parcelaEl.value = 'Pagamento único (cartão)';
+    } else {
+      tipoRow.style.display = '';
+      if(tipo === 'avista'){
+        parcelasRow.style.display = 'none';
+        diaRow.style.display = 'none';
+        const total = PACOTES_VALORES[pacote].avista;
+        valorEl.value = 'R$ ' + total.toFixed(2).replace('.',',');
+        parcelaEl.value = 'Pagamento único (PIX)';
+      } else {
+        parcelasRow.style.display = '';
+        diaRow.style.display = '';
+        if(!dia) populateDiaVencimento('newClientDiaVencimento');
+        const total = PACOTES_VALORES[pacote]['6x'];
+        const parcela = total / parseInt(qtd);
+        valorEl.value = 'R$ ' + total.toFixed(2).replace('.',',');
+        parcelaEl.value = qtd + 'x de R$ ' + parcela.toFixed(2).replace('.',',') + (dia ? ' · venc. dia ' + dia : '');
+      }
+    }
+  }
+
+  function updateEditPackageValue(){
+    const pacote = document.getElementById('editClientPackage').value;
+    const meio = document.getElementById('editClientMeioPagamento').value;
+    const tipo = document.getElementById('editClientTipoPagamento').value;
+    const qtd = document.getElementById('editClientQtdParcelas').value;
+    const dia = document.getElementById('editClientDiaVencimento').value;
+    const valorEl = document.getElementById('editClientValor');
+    const parcelaEl = document.getElementById('editClientParcelaMensal');
+    const tipoRow = document.getElementById('editClientTipoRow');
+    const parcelasRow = document.getElementById('editClientParcelasRow');
+    const diaRow = document.getElementById('editClientDiaRow');
+
+    if(meio === 'cartao'){
+      tipoRow.style.display = 'none';
+      parcelasRow.style.display = 'none';
+      diaRow.style.display = 'none';
+      const total = PACOTES_VALORES[pacote].avista;
+      valorEl.value = 'R$ ' + total.toFixed(2).replace('.',',');
+      parcelaEl.value = 'Pagamento único (cartão)';
+    } else {
+      tipoRow.style.display = '';
+      if(tipo === 'avista'){
+        parcelasRow.style.display = 'none';
+        diaRow.style.display = 'none';
+        const total = PACOTES_VALORES[pacote].avista;
+        valorEl.value = 'R$ ' + total.toFixed(2).replace('.',',');
+        parcelaEl.value = 'Pagamento único (PIX)';
+      } else {
+        parcelasRow.style.display = '';
+        diaRow.style.display = '';
+        const total = PACOTES_VALORES[pacote]['6x'];
+        const parcela = total / parseInt(qtd);
+        valorEl.value = 'R$ ' + total.toFixed(2).replace('.',',');
+        parcelaEl.value = qtd + 'x de R$ ' + parcela.toFixed(2).replace('.',',') + (dia ? ' · venc. dia ' + dia : '');
+      }
+    }
+  }
+
+  function openEditClientModal(nome){
+    const c = allClientes.find(x => x.nome === nome);
+    if(!c) return;
+    document.getElementById('editClientId').value = c.id || c.nome;
+    document.getElementById('editClientName').value = c.nome || '';
+    document.getElementById('editClientEmail').value = c.email || '';
+    document.getElementById('editClientWhats').value = c.whatsapp || c.telefone || '';
+    document.getElementById('editClientCpf').value = c.cpf || '';
+    document.getElementById('editClientPackage').value = c.pacote || 'essencial';
+    document.getElementById('editClientMeioPagamento').value = c.meio_pagamento || 'pix';
+    document.getElementById('editClientTipoPagamento').value = c.tipo_pagamento || 'avista';
+    document.getElementById('editClientQtdParcelas').value = c.parcelas_total || 6;
+    document.getElementById('editClientStatus').value = c.status || 'ativo';
+    document.getElementById('editClientPilar').value = c.pilar_atual || 1;
+    populateDiaVencimento('editClientDiaVencimento');
+    document.getElementById('editClientDiaVencimento').value = c.dia_vencimento || '';
+    const funcs = allFuncs || [];
+    const sel = document.getElementById('editClientResponsible');
+    sel.innerHTML = '<option value="">Selecione...</option>' + funcs.map(f => `<option value="${f.nome.replace(/"/g,'&quot;')}" ${f.nome===c.funcionario?'selected':''}>${f.nome}</option>`).join('');
+    updateEditPackageValue();
+    closeModal('modalCliente');
+    openModal('editClientModal');
+  }
+
+  async function saveClientEdit(){
+    const id = document.getElementById('editClientId').value;
+    const whatsapp = document.getElementById('editClientWhats').value.trim();
+    const cpf = document.getElementById('editClientCpf').value.trim();
+    const pacote = document.getElementById('editClientPackage').value;
+    const meio = document.getElementById('editClientMeioPagamento').value;
+    const tipo = meio === 'cartao' ? 'avista' : document.getElementById('editClientTipoPagamento').value;
+    const qtdParcelas = tipo === 'parcelado_pix' ? parseInt(document.getElementById('editClientQtdParcelas').value) : 1;
+    const diaVenc = tipo === 'parcelado_pix' ? parseInt(document.getElementById('editClientDiaVencimento').value) : null;
+    const valor = PACOTES_VALORES[pacote]['6x'];
+    const parcela = tipo === 'parcelado_pix' ? valor / qtdParcelas : valor;
+    const data = {
+      nome: document.getElementById('editClientName').value.trim(),
+      email: document.getElementById('editClientEmail').value.trim(),
+      whatsapp, cpf, telefone: whatsapp,
+      pacote,
+      meio_pagamento: meio,
+      tipo_pagamento: tipo,
+      valor_total: valor,
+      parcela_valor: parcela,
+      parcelas_total: qtdParcelas,
+      dia_vencimento: diaVenc,
+      status: document.getElementById('editClientStatus').value,
+      pilar_atual: parseInt(document.getElementById('editClientPilar').value),
+      funcionario: document.getElementById('editClientResponsible').value
+    };
+    if (!data.nome || !data.email) return toast('Informe nome e e-mail.', 'error');
+    try { await API.clientes.update(id, data); closeModal('editClientModal'); toast('Cliente atualizado.'); loadData(); } catch (error) { toast(error.message, 'error'); }
+  }
+
+  // Modal
+  function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+  function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+  async function createClient() {
+    const whatsapp = document.getElementById('newClientWhats').value.trim();
+    const cpf = document.getElementById('newClientCpf').value.trim();
+    const pacote = document.getElementById('newClientPackage').value;
+    const meio = document.getElementById('newClientMeioPagamento').value;
+    const tipo = meio === 'cartao' ? 'avista' : document.getElementById('newClientTipoPagamento').value;
+    const qtdParcelas = tipo === 'parcelado_pix' ? parseInt(document.getElementById('newClientQtdParcelas').value) : 1;
+    const diaVenc = tipo === 'parcelado_pix' ? parseInt(document.getElementById('newClientDiaVencimento').value) : null;
+    const valor = PACOTES_VALORES[pacote]['6x'];
+    const parcela = tipo === 'parcelado_pix' ? valor / qtdParcelas : valor;
+    const data = {
+      nome:document.getElementById('newClientName').value.trim(),
+      email:document.getElementById('newClientEmail').value.trim(),
+      whatsapp, cpf, telefone:whatsapp,
+      pacote,
+      meio_pagamento: meio,
+      tipo_pagamento: tipo,
+      valor_total: valor,
+      parcela_valor: parcela,
+      parcelas_total: qtdParcelas,
+      dia_vencimento: diaVenc,
+      funcionario:document.getElementById('newClientResponsible').value
+    };
+    if (!data.nome || !data.email) return toast('Informe nome e e-mail.', 'error');
+    if (cpf.replace(/\D/g,'').length !== 11) return toast('Informe um CPF válido.', 'error');
+    if (whatsapp.replace(/\D/g,'').length < 10) return toast('Informe um WhatsApp válido.', 'error');
+    if (tipo === 'parcelado_pix' && !diaVenc) return toast('Selecione o dia de vencimento.', 'error');
+    try {
+      await API.clientes.create(data);
+      const entradaVal = parseFloat(document.getElementById('newClientEntrada')?.value) || 0;
+      if (entradaVal > 0) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        await API.financeiro.create({
+          cliente: data.nome,
+          descricao: `Entrada da Mentoria (${PACOTE_LABEL[pacote] || pacote})`,
+          valor: entradaVal,
+          vencimento: todayStr,
+          data: todayStr,
+          status: 'pago'
+        });
+      }
+      closeModal('newClientModal'); toast('Cliente cadastrado com sucesso!'); loadData();
+    } catch (error) { toast(error.message, 'error'); }
+  }
+  document.addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open'); });
+
+  // Get client data
+  function getClientData(nome) {
+    const pagamentos = allPagamentos.filter(p => p.cliente === nome);
+    const contrato = allContratos.find(c => c.cliente === nome);
+    const encontros = allEncontros.filter(e => e.cliente === nome).sort((a,b) => a.data.localeCompare(b.data));
+    const recebido = pagamentos.filter(p => p.status === 'pago').reduce((s,p) => s + p.valor, 0);
+    const pendente = pagamentos.filter(p => p.status !== 'pago').reduce((s,p) => s + p.valor, 0);
+    const atrasado = pagamentos.filter(p => p.status === 'atrasado').reduce((s,p) => s + p.valor, 0);
+    const totalContrato = pagamentos.reduce((s,p) => s + (p.valor_total || p.valor), 0);
+    return { pagamentos, contrato, encontros, recebido, pendente, atrasado, totalContrato };
+  }
+
+  // Get pendencias
+  function getPendencias(cliente) {
+    const pendencias = [];
+    const data = getClientData(cliente.nome);
+    if (cliente.pendencias) {
+      cliente.pendencias.forEach(p => {
+        if (p.toLowerCase().includes('pagamento') || p.toLowerCase().includes('parcela')) pendencias.push({ tipo: 'pagamento', texto: p });
+        else if (p.toLowerCase().includes('contrato')) pendencias.push({ tipo: 'contrato', texto: p });
+        else pendencias.push({ tipo: 'outro', texto: p });
+      });
+    }
+    if (data.atrasado > 0 && !pendencias.find(p => p.tipo === 'pagamento')) {
+      pendencias.push({ tipo: 'pagamento', texto: 'Parcela(s) atrasada(s)' });
+    }
+    if (data.contrato && data.contrato.status !== 'assinado' && !pendencias.find(p => p.tipo === 'contrato')) {
+      pendencias.push({ tipo: 'contrato', texto: 'Contrato ' + data.contrato.status });
+    }
+    return pendencias;
+  }
+
+  // Render KPIs
+  function renderKPIs() {
+    const total = allClientes.length;
+    const ticketMedio = allPagamentos.length > 0 ? allPagamentos.reduce((s,p) => s + p.valor, 0) / allClientes.length : 0;
+    const comPendencias = allClientes.filter(c => getPendencias(c).length > 0).length;
+    const progressoMedio = total > 0 ? Math.round(allClientes.reduce((s,c) => s + pilarProgresso(clientePilar(c)), 0) / total) : 0;
+    const pacotes = {};
+    allClientes.forEach(c => { pacotes[c.pacote] = (pacotes[c.pacote] || 0) + 1; });
+    const pacoteMaisVendido = Object.entries(pacotes).sort((a,b) => b[1] - a[1])[0];
+    const pacoteLabel = { excelencia:'Excelência', estrategico:'Estratégico', essencial:'Essencial' };
+
+    document.getElementById('kpiTotal').textContent = total;
+    document.getElementById('kpiTotalMeta').textContent = allClientes.filter(c => c.status === 'ativo').length + ' ativos';
+    document.getElementById('kpiTicket').textContent = formatCurrency(ticketMedio);
+    document.getElementById('kpiPendencias').textContent = comPendencias;
+    document.getElementById('kpiProgresso').textContent = progressoMedio + '%';
+    document.getElementById('kpiPacote').textContent = pacoteLabel[pacoteMaisVendido?.[0]] || '—';
+    document.getElementById('kpiPacoteMeta').textContent = pacoteMaisVendido ? pacoteMaisVendido[1] + ' clientes' : '—';
+  }
+
+  // Render clients
+  function renderClientes() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const status = document.getElementById('filterStatus').value;
+    const pacote = document.getElementById('filterPacote').value;
+    const pendencia = document.getElementById('filterPendencia').value;
+
+    let filtered = allClientes;
+
+    if (search) filtered = filtered.filter(c => c.nome.toLowerCase().includes(search) || c.email.toLowerCase().includes(search));
+    if (status) filtered = filtered.filter(c => c.status === status);
+    if (pacote) filtered = filtered.filter(c => c.pacote === pacote);
+    if (pendencia === 'pagamento') filtered = filtered.filter(c => getPendencias(c).some(p => p.tipo === 'pagamento'));
+    else if (pendencia === 'contrato') filtered = filtered.filter(c => getPendencias(c).some(p => p.tipo === 'contrato'));
+    else if (pendencia === 'nenhuma') filtered = filtered.filter(c => getPendencias(c).length === 0);
+
+    const pacoteLabel = { excelencia:'Excelência', estrategico:'Estratégico', essencial:'Essencial' };
+    const statusColors = { ativo: 'var(--success)', pausado: 'var(--warning)', concluido: 'var(--info)' };
+
+    document.getElementById('clientesCount').textContent = filtered.length + ' de ' + allClientes.length + ' clientes';
+
+    document.getElementById('clientesGrid').innerHTML = filtered.map((c, i) => {
+      const pendencias = getPendencias(c);
+      const data = getClientData(c.nome);
+      const pilar = clientePilar(c);
+      const pct = pilarProgresso(pilar);
+      const progressColor = pct >= 75 ? 'var(--success)' : pct >= 50 ? 'var(--primary)' : 'var(--warning)';
+      const initials = c.avatar || c.nome.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+      return `<div class="cliente-card anim-up" style="animation-delay:${i * 0.05}s" onclick="showClienteDetail('${c.nome}')">
+        <div class="cliente-card__top">
+          <div class="cliente-card__avatar">${initials}</div>
+          <div style="flex:1;min-width:0">
+            <div class="cliente-card__name">${c.nome}</div>
+            <div class="cliente-card__email">${c.email}</div>
+          </div>
+          <span class="badge badge--${c.status === 'ativo' ? 'success' : c.status === 'pausado' ? 'warning' : 'info'}"><span class="badge-dot"></span>${labelForStatus(c.status)}</span>
+        </div>
+        <div class="cliente-card__badges">
+          <span class="badge badge--primary"><span class="badge-dot"></span>${pacoteLabel[c.pacote] || c.pacote}</span>
+          <span class="badge badge--info"><span class="badge-dot"></span>Pilar ${pilar} — ${pilarNome(pilar)}</span>
+          ${pendencias.length ? `<span class="badge badge--danger"><span class="badge-dot"></span>${pendencias.length} pendência(s)</span>` : '<span class="badge badge--success"><span class="badge-dot"></span>Em dia</span>'}
+        </div>
+        <div class="cliente-card__row"><span>Colaborador</span><strong>${c.funcionario || '—'}</strong></div>
+        <div class="cliente-card__row"><span>Progresso</span><strong>${pct}%</strong></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${progressColor}"></div></div>
+        <div class="cliente-card__row"><span>Valor</span><strong>${formatCurrency(c.valor_total || 0)} · ${c.meio_pagamento === 'cartao' ? 'Cartão' : 'PIX'}${c.tipo_pagamento === 'parcelado_pix' ? ' ' + c.parcelas_total + 'x' : ''}</strong></div>
+        <div class="cliente-card__row"><span>Próximo encontro</span><strong>${c.proximo_encontro ? formatDate(c.proximo_encontro.split(' ')[0]) : '—'}</strong></div>
+        <div class="cliente-card__row"><span>Recebido</span><strong style="color:var(--success)">${formatCurrency(data.recebido)}</strong></div>
+        ${data.pendente > 0 ? `<div class="cliente-card__row"><span>A receber</span><strong style="color:var(--warning)">${formatCurrency(data.pendente)}</strong></div>` : ''}
+        ${pendencias.length ? `<div class="pendencias-list">${pendencias.map(p => `<div class="pendencia-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>${p.texto}</div>`).join('')}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    document.querySelectorAll('.anim-up').forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight) el.classList.add('is-visible');
+    });
+  }
+
+  // Show client detail modal
+  function showClienteDetail(nome) {
+    const cliente = allClientes.find(c => c.nome === nome);
+    if (!cliente) return;
+    const data = getClientData(nome);
+    const pacoteLabel = { excelencia:'Excelência', estrategico:'Estratégico', essencial:'Essencial' };
+    const pendencias = getPendencias(cliente);
+    const pilar = clientePilar(cliente);
+
+    document.getElementById('modalClienteTitle').textContent = cliente.nome;
+
+    let html = `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line-soft)">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#5e3d2a);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;flex-shrink:0">${cliente.avatar || cliente.nome.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-size:1.1rem;font-weight:700;color:var(--ink)">${cliente.nome}</div>
+          <div style="font-size:0.82rem;color:var(--muted)">${cliente.email}${cliente.whatsapp ? ' · ' + cliente.whatsapp : ''}</div>
+          <div style="font-size:0.82rem;color:var(--muted)">Responsável: <strong>${cliente.funcionario || '—'}</strong></div>
+          <div style="margin-top:6px"><span class="badge badge--info"><span class="badge-dot"></span>Pilar ${pilar} — ${pilarNome(pilar)}</span></div>
+        </div>
+        <span class="badge badge--${cliente.status === 'ativo' ? 'success' : 'warning'}"><span class="badge-dot"></span>${labelForStatus(cliente.status)}</span>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg> Financeiro</div>
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-item__label">Pacote</div><div class="detail-item__value">${pacoteLabel[cliente.pacote] || cliente.pacote || '—'}</div></div>
+          <div class="detail-item"><div class="detail-item__label">Valor Total</div><div class="detail-item__value">${formatCurrency(cliente.valor_total || 0)}</div></div>
+          <div class="detail-item"><div class="detail-item__label">Meio</div><div class="detail-item__value">${cliente.meio_pagamento === 'cartao' ? 'Cartão (crédito)' : 'PIX'}${cliente.tipo_pagamento === 'parcelado_pix' ? ' — Parcelado' : ' — À vista'}</div></div>
+          <div class="detail-item"><div class="detail-item__label">Parcela</div><div class="detail-item__value">${formatCurrency(cliente.parcela_valor || 0)}${cliente.parcelas_total > 1 ? ' · ' + cliente.parcelas_total + 'x' : ''}${cliente.dia_vencimento ? ' · venc. dia ' + cliente.dia_vencimento : ''}</div></div>
+          <div class="detail-item"><div class="detail-item__label">Recebido</div><div class="detail-item__value" style="color:var(--success)">${formatCurrency(data.recebido)}</div></div>
+          <div class="detail-item"><div class="detail-item__label">A Receber</div><div class="detail-item__value" style="color:var(--warning)">${formatCurrency(data.pendente)}</div></div>
+          <div class="detail-item"><div class="detail-item__label">Inadimplência</div><div class="detail-item__value" style="color:var(--danger)">${formatCurrency(data.atrasado)}</div></div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Contrato</div>
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-item__label">Status</div><div class="detail-item__value"><span class="badge badge--${data.contrato?.status === 'assinado' ? 'success' : data.contrato?.status === 'enviado' ? 'warning' : 'neutral'}"><span class="badge-dot"></span>${data.contrato?.status ? labelForStatus(data.contrato.status) : 'Sem contrato'}</span></div></div>
+          <div class="detail-item"><div class="detail-item__label">Enviado em</div><div class="detail-item__value">${data.contrato?.enviado_em ? formatDate(data.contrato.enviado_em) : '—'}</div></div>
+          <div class="detail-item"><div class="detail-item__label">Assinado em</div><div class="detail-item__value">${data.contrato?.assinado_em && data.contrato.assinado_em !== '—' ? formatDate(data.contrato.assinado_em) : '—'}</div></div>
+          <div class="detail-item"><div class="detail-item__label">Arquivo</div><div class="detail-item__value" style="font-size:0.78rem">${data.contrato?.arquivo || '—'}</div></div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Cronograma (${data.encontros.length} encontros)</div>
+        <div class="timeline-mini">
+          ${data.encontros.slice(-5).map(e => {
+            const dt = new Date(e.data.replace(' ', 'T'));
+            const isDone = e.status === 'realizado';
+            const isFuture = dt > new Date();
+            const dotClass = isDone ? 'timeline-mini__dot--done' : isFuture ? 'timeline-mini__dot--current' : '';
+            return `<div class="timeline-mini__item">
+              <div class="timeline-mini__dot ${dotClass}"></div>
+              <div style="font-weight:700;color:var(--ink)">${dt.toLocaleDateString('pt-BR', {day:'2-digit',month:'short'})} às ${dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div>
+              <div style="color:var(--muted);font-size:0.74rem">${e.titulo} · ${e.funcionario || '—'}</div>
+            </div>`;
+          }).join('') || '<div style="font-size:0.82rem;color:var(--muted);padding:12px 0">Nenhum encontro registrado</div>'}
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section__title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Pagamentos (${data.pagamentos.length} parcelas)</div>
+        <div style="max-height:160px;overflow-y:auto">
+          ${data.pagamentos.map(p => `
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:0.82rem">
+              <span class="badge badge--${p.status === 'pago' ? 'success' : p.status === 'atrasado' ? 'danger' : 'warning'}" style="font-size:0.64rem"><span class="badge-dot"></span>${labelForStatus(p.status)}</span>
+              <div style="flex:1"><strong>${p.parcela_atual || 1}/${p.parcelas_total || 1}</strong> — ${formatDate(p.vencimento)}</div>
+              <strong>${formatCurrency(p.valor)}</strong>
+            </div>
+          `).join('') || '<div style="font-size:0.82rem;color:var(--muted);padding:12px 0">Nenhum pagamento registrado</div>'}
+        </div>
+      </div>
+
+      ${pendencias.length ? `<div style="background:var(--warning-bg);border:1px solid #f0dfb5;border-radius:12px;padding:14px;margin-top:16px">
+        <div style="font-size:0.68rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--warning);margin-bottom:8px">Pendências</div>
+        ${pendencias.map(p => `<div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text);padding:3px 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;color:var(--warning)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>${p.texto}</div>`).join('')}
+      </div>` : ''}
+    `;
+
+    document.getElementById('modalClienteBody').innerHTML = html;
+    document.getElementById('modalClienteAction').onclick = () => { window.location.href = `./cliente.html?id=${encodeURIComponent(cliente.nome)}`; };
+    document.getElementById('modalClienteEditBtn').onclick = () => { openEditClientModal(cliente.nome); };
+    openModal('modalCliente');
+  }
+
+  // Load data
+  async function loadData() {
+    allClientes = await API.clientes.list();
+    allPagamentos = await API.pagamentos.list();
+    allContratos = await API.contratos.list();
+    allEncontros = await API.encontros.list();
+    const funcs = await API.funcionarios.list();
+    allFuncs = funcs;
+    const select = document.getElementById('newClientResponsible');
+    if (select) {
+      select.innerHTML = '<option value="">Selecione o colaborador...</option>' + funcs.map(f => `<option value="${f.nome.replace(/"/g,'&quot;')}">${f.nome}</option>`).join('');
+    }
+    renderKPIs();
+    renderClientes();
+  }
+
+  loadData();
+</script>
+</body>
+</html>

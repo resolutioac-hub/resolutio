@@ -1,0 +1,88 @@
+/* Resolutio — Premium Design System | MENTORIA #725047 #beb0a3 */
+:root {
+  --primary: #725047;
+  --primary-600: #5e423f;
+  --primary-700: #4a332f;
+  --primary-50: #fdf6ec;
+  --primary-100: #f8ede0;
+  --primary-200: #e8d5c5;
+  --bege: #beb0a3;
+  --bege-50: #f6f0e8;
+  --cream: #fdfaf7;
+  --surface: #ffffff;
+  --ink: #1e1e1e;
+  --text: #2a2728;
+  --muted: #8a7d7a;
+  --line: #ece0d9;
+  --line-soft: #f3ece7;
+
+  --glass-bg: rgba(255,255,255,0.68);
+  --glass-strong: rgba(255,255,255,0.84);
+  --glass-border: rgba(255,255,255,0.78);
+  --glass-shadow: 0 18px 50px rgba(74,51,47,0.10);
+  --accent-warm: #c88768;
+  --accent-light: #ead2c3;
+
+  --success: #2e6b3a;
+  --success-bg: #eaf3e8;
+  --warning: #8a5d1a;
+  --warning-bg: #fef3dc;
+  --danger: #7a2d2d;
+  --danger-bg: #fde8e8;
+  --info: #4a5d7a;
+  --info-bg: #eef2f7;
+
+  --font-sans: 'Albert Sans', Inter, system-ui, sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+
+  --fs-12: 0.75rem;
+  --fs-13: 0.813rem;
+  --fs-14: 0.875rem;
+  --fs-16: 1rem;
+  --fs-18: 1.125rem;
+  --fs-24: 1.5rem;
+  --fs-32: 2rem;
+  --fs-40: 2.5rem;
+
+  --s-8: 8px;
+  --s-12: 12px;
+  --s-16: 16px;
+  --s-24: 24px;
+  --s-32: 32px;
+
+  --r-10: 10px;
+  --r-12: 12px;
+  --r-16: 16px;
+  --r-full: 999px;
+
+  --shadow-xs: 0 1px 2px rgba(30,21,19,0.06);
+  --shadow-sm: 0 2px 8px rgba(30,21,19,0.07);
+  --shadow-md: 0 8px 24px rgba(30,21,19,0.09);
+
+  --t: 200ms cubic-bezier(0.2,0,0,1);
+
+  --sidebar-w: 280px;
+  --header-h: 64px;
+  --content-w: 1180px;
+
+  /* Aliases para compatibilidade com HTML antigo */
+  --primary-deep: #4a332f;
+  --primary-light: #fdf6ec;
+  --primary-soft: #f8ede0;
+  --primary-muted: #e8d5c5;
+  --primary-border: #e0cfc0;
+  --accent: #beb0a3;
+  --accent-light: #f6f0e8;
+  --bg: #fdfaf7;
+  --content-w: 1180px;
+  --gray-50: #f3ece7;
+  --gray-100: #ece0d9;
+  --gray-200: #e0cfc0;
+  --gray-300: #d6ccc8;
+  --gray-400: #b0a6a3;
+  --gray-500: #8a7d7a;
+  --gray-600: #6b5a57;
+  --gray-700: #4a3734;
+  --gray-800: #2a2728;
+  --gray-900: #1e1e1e;
+}
