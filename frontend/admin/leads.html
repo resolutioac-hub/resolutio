@@ -1,0 +1,416 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  body { font-family: var(--font-body); background: linear-gradient(170deg, #fcfaf6 0%, #f4efe8 100%); color: #1a1715; overflow-x: hidden; }
+  .sidebar { width: 260px; background: linear-gradient(180deg, #fff 0%, #fdfaf7 100%); border-right: 1px solid var(--line); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; box-shadow: 6px 0 20px rgba(30,21,19,0.04); }
+  .sidebar__brand { padding: 28px 22px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sidebar__logo { width: 52px; height: 52px; border-radius: 50%; background: var(--primary-50); border: 1px solid var(--primary-200); padding: 2px; }
+  .sidebar__logo img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .sidebar__title { font-family: var(--font-body); font-size: 1rem; font-weight: 800; letter-spacing: 0.12em; color: var(--primary-700); text-transform: uppercase; margin-top: 14px; }
+  .sidebar__subtitle { font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .nav__label { font-family: var(--font-body); font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 18px 14px 8px; }
+  .nav__item { color: var(--text); font-size: 0.82rem; padding: 10px 14px; border-radius: 10px; transition: background 150ms ease; display: flex; align-items: center; gap: 10px; }
+  .nav__item:hover { background: var(--primary-50); color: var(--primary-700); }
+  .nav__item--active { background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(114,80,71,0.25); }
+  .nav__badge { background: var(--bege); color: var(--primary-700); }
+  .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+  .nav__icon svg { width: 16px; height: 16px; }
+  .sidebar__footer { padding: 16px; border-top: 1px solid var(--line-soft); }
+  .user { background: rgba(255,255,255,0.8); border-radius: 14px; padding: 12px; border: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .user__avatar { background: linear-gradient(135deg, var(--primary), var(--primary-700)); box-shadow: 0 4px 12px rgba(114,80,71,0.25); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.72rem; color: #fff; }
+  .user__name { color: var(--ink); font-weight: 600; font-size: 0.80rem; }
+  .user__email { color: var(--muted); font-size: 0.66rem; }
+  .main { flex: 1; margin-left: 260px; min-height: 100vh; }
+  .topbar { height: 72px; background: rgba(255,255,255,0.75); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(30,21,19,0.06); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 50; }
+  .topbar__title { font-family: var(--font-body); font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+  .topbar__subtitle { font-size: 0.80rem; color: var(--muted); }
+  .topbar__actions { display: flex; gap: 8px; align-items: center; }
+  .page { padding: 28px 32px; max-width: 1180px; width: 100%; margin: 0 auto; }
+  @keyframes riseUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-up { opacity: 0; transform: translateY(28px); }
+  .anim-up.is-visible { animation: riseUp 0.9s cubic-bezier(0.22,1,0.36,1) both; }
+  .section-card { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); }
+  .section-card__title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 400; color: var(--ink); }
+  .lead-card { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); transition: transform 250ms ease, box-shadow 250ms ease; }
+  .lead-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(114,80,71,0.10); }
+  .lead-card__header { display: flex; justify-content: space-between; align-items: start; }
+  .lead-card__name { font-family: var(--font-display); font-size: 1.4rem; font-weight: 400; color: var(--ink); }
+  .lead-card__email { font-size: 0.80rem; color: var(--muted); margin-top: 2px; }
+  .lead-card__pacote { font-size: 0.72rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; }
+  .lead-card__origem { font-size: 0.72rem; color: var(--muted); }
+  .lead-card__qualificacao { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+  .lead-card__qualificacao-label { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .lead-card__qualificacao-text { font-size: 0.82rem; color: var(--text); line-height: 1.5; }
+  .lead-card__actions { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+  .action-btn { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: #fff; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 150ms; display: inline-flex; align-items: center; gap: 4px; font-family: inherit; }
+  .action-btn:hover { transform: translateY(-1px); }
+  .action-btn--success { color: var(--success); border-color: #c8dfcc; }
+  .action-btn--success:hover { background: var(--success-bg); }
+  .action-btn--primary { color: var(--primary); border-color: var(--primary-200); }
+  .action-btn--primary:hover { background: var(--primary-50); }
+  .action-btn--warning { color: var(--warning); border-color: #f0dfb5; }
+  .action-btn--warning:hover { background: var(--warning-bg); }
+  .action-btn--danger { color: var(--danger); border-color: #e8c9c9; }
+  .action-btn--danger:hover { background: var(--danger-bg); }
+  .action-btn svg { width: 12px; height: 12px; }
+  .pipeline { display: grid; grid-template-columns: repeat(6, minmax(190px, 1fr)); gap: 12px; margin-bottom: 28px; overflow-x: auto; padding-bottom: 8px; }
+  .pipeline-stage { min-width: 0; background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 16px; min-height: 260px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); }
+  .pipeline-stage__header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); }
+  .pipeline-stage__dot { width: 10px; height: 10px; border-radius: 50%; }
+  .pipeline-stage__title { font-size: 0.78rem; font-weight: 700; color: var(--ink); }
+  .pipeline-stage__owner { color: var(--muted); font-size: 0.62rem; margin: -8px 0 12px 18px; }
+  .pipeline-stage__count { font-size: 0.70rem; color: var(--muted); margin-left: auto; background: var(--line-soft); padding: 2px 8px; border-radius: 999px; }
+  .pipeline-card { min-width: 0; overflow: hidden; background: #fff; border: 1.5px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 8px; cursor: pointer; transition: all 150ms; }
+  .pipeline-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(114,80,71,0.10); }
+  .pipeline-card__name { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
+  .pipeline-card__meta { font-size: 0.72rem; color: var(--muted); margin-top: 4px; overflow-wrap: anywhere; }
+  .pipeline-card__pacote { font-size: 0.68rem; color: var(--primary); font-weight: 700; margin-top: 6px; }
+  .pipeline-card__actions { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 10px; }
+  .pipeline-card__actions .action-btn { width: 100%; min-width: 0; justify-content: center; white-space: normal; }
+  .view-toggle { display: flex; gap: 4px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+  .view-toggle button { padding: 6px 14px; border-radius: 8px; border: none; background: transparent; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--muted); transition: all 150ms; }
+  .view-toggle button.active { background: var(--primary); color: #fff; }
+  /* History */
+  .history-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line-soft); font-size: 0.82rem; }
+  .history-item:last-child { border-bottom: none; }
+  .history-date { font-size: 0.72rem; color: var(--muted); white-space: nowrap; min-width: 80px; }
+  .history-text { color: var(--text); }
+  .history-badge { font-size: 0.66rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  @media (max-width: 900px) { .pipeline { grid-template-columns: repeat(6, minmax(190px, 1fr)); } .page { padding: 16px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <img src="../assets/images/logo-branca.png" alt="Resolutio" style="width:100%;max-width:180px;height:auto;object-fit:contain">
+    </div>
+    <nav class="sidebar__nav">
+      <div class="nav__label">Principal</div>
+      <a class="nav__item" href="./dashboard.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Dashboard</a>
+      <a class="nav__item nav__item--active" href="./leads.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h10M4 18h16"/></svg></span> Leads <span class="nav__badge" id="navLeadsCount">0</span></a>
+      <a class="nav__item" href="./clientes.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/></svg></span> Clientes</a>
+      <a class="nav__item" href="./funcionarios.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="7" r="3"/><path d="M16 11h4M19 9v4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4"/></svg></span> Equipe</a>
+      <div class="nav__label">Operação</div>
+      <a class="nav__item" href="./agendamento.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Agenda</a>
+      <a class="nav__item" href="./materiais.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 13H8M10 17H8M14 13h4M14 17h4"/></svg></span> Materiais</a>
+      <a class="nav__item" href="./financeiro.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg></span> Financeiro</a>
+      <a class="nav__item" href="./contratos.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span> Contratos</a>
+      <div class="nav__label">Sistema</div>
+      <a class="nav__item" href="../mentoria.html" target="_blank"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span> Link do Método</a>
+      <a class="nav__item" href="./config.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg></span> Configurações</a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user"><div class="user__avatar" id="userAvatar">BR</div><div><div class="user__name" id="userName">Bruna Sirqueira</div><div class="user__email" id="userEmail">admin@resolutio.com</div></div></div>
+      <button class="btn btn--danger btn--sm" style="width:100%;margin-top:10px" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('is-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div>
+          <div class="topbar__title">Leads</div>
+          <div class="topbar__subtitle">Captação, qualificação, call e fechamento</div>
+        </div>
+      </div>
+      <div class="topbar__actions">
+        <div class="view-toggle">
+          <button class="active" onclick="setView('kanban', this)">Pipeline</button>
+          <button onclick="setView('list', this)">Lista</button>
+        </div>
+        <button class="btn btn--primary btn--sm" onclick="openModal('newLeadModal')">+ Novo lead</button>
+      </div>
+    </header>
+
+    <div class="page">
+      <div id="kanbanView" class="anim-up">
+        <div class="pipeline" id="pipeline"></div>
+      </div>
+      <div id="listView" class="anim-up" style="display:none">
+        <div class="section-card"><h2 class="section-card__title">Todos os leads</h2><div id="leadsTable"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="newLeadModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><h3>Novo lead</h3><button class="modal-close" onclick="closeModal('newLeadModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nome completo *</label><input class="form-control" id="leadNome" placeholder="Nome"></div>
+      <div class="form-group"><label>E-mail *</label><input class="form-control" id="leadEmail" type="email" placeholder="email@exemplo.com"></div>
+      <div class="form-group"><label>Pacote de interesse</label><select class="form-control" id="leadPacote"><option value="excelencia">Excelência (6 meses)</option><option value="estrategico">Estratégico (4 meses)</option><option value="essencial">Essencial (3 meses)</option></select></div>
+      <div class="form-group"><label>Origem do primeiro contato</label><select class="form-control" id="leadOrigem"><option value="instagram">Instagram</option><option value="beacons">Beacons / link na bio</option><option value="whatsapp">WhatsApp</option><option value="direct">Direct</option><option value="indicacao">Indicação</option></select></div>
+      <div class="form-group"><label>Data do primeiro contato</label><input class="form-control" id="leadDataContato" type="date"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('newLeadModal')">Cancelar</button><button class="btn btn--primary" onclick="saveLead()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="qualifyModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><h3>Qualificar lead</h3><button class="modal-close" onclick="closeModal('qualifyModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div id="qualifyLeadName" style="font-family:var(--font-display);font-size:1.2rem;color:var(--ink);margin-bottom:16px"></div>
+      <div class="form-group"><label>Nota de qualificação (1-10)</label><input class="form-control" id="qualifyNota" type="number" min="1" max="10" placeholder="8"></div>
+      <div class="form-group"><label>Interesse principal</label><select class="form-control" id="qualifyInteresse"><option value="concurso">Concurso público</option><option value="residencia">Residência</option><option value="mestrado">Mestrado</option><option value="doutorado">Doutorado</option><option value="pos_graduacao">Pós-graduação</option></select></div>
+      <div class="form-group"><label>Perfil do lead</label><select class="form-control" id="qualifyPerfil"><option value="quente">Quente - alta intenção</option><option value="morno">Morno - precisa nutrir</option><option value="frio">Frio - conscientização</option></select></div>
+      <div class="form-group"><label>Observações</label><textarea class="form-control" id="qualifyObs" rows="3" placeholder="Notas sobre o lead..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('qualifyModal')">Cancelar</button><button class="btn btn--primary" onclick="saveQualificacao()">Salvar qualificação</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="historyModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><h3>Histórico de status</h3><button class="modal-close" onclick="closeModal('historyModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body" id="historyContent"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="advanceModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><h3>Avançar lead</h3><button class="modal-close" onclick="closeModal('advanceModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div id="advanceLeadName" style="font-family:var(--font-display);font-size:1.2rem;color:var(--ink);margin-bottom:16px"></div>
+      <div class="form-group"><label>Próximo estágio</label><select class="form-control" id="advanceNextStage"></select></div>
+      <div class="form-group"><label>Observação</label><input class="form-control" id="advanceObs" placeholder="Motivo da mudança..."></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('advanceModal')">Cancelar</button><button class="btn btn--primary" onclick="saveAdvance()">Confirmar</button></div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  requireAuth(['admin']); setupSidebar();
+
+  const stages = [
+    { id: 'novo', label: 'Novo lead', owner: 'Acolhimento inicial', color: '#725047' },
+    { id: 'em_conversa', label: 'Em conversa', owner: 'Qualificação', color: '#a66a4f' },
+    { id: 'call_marcada', label: 'Call marcada', owner: 'Agendamento de call', color: '#c08a49' },
+    { id: 'proposta_enviada', label: 'Proposta enviada', owner: 'Negociação', color: '#80646d' },
+    { id: 'fechado', label: 'Fechado', owner: 'Contrato / cobrança', color: '#3f7656' },
+    { id: 'perdido', label: 'Perdido', owner: 'Follow-up', color: '#9b5c5c' }
+  ];
+  const pacoteLabel = { excelencia: 'Excelência', estrategico: 'Estratégico', essencial: 'Essencial' };
+  const perfilLabel = { quente: '🔥 Quente', morno: '🌊 Morno', frio: '❄️ Frio' };
+  const interesseLabel = { concurso: 'Concurso', residencia: 'Residência', mestrado: 'Mestrado', doutorado: 'Doutorado', pos_graduacao: 'Pós-graduação' };
+
+  let allLeads = [];
+  let currentView = 'kanban';
+
+  function setView(view, btn) {
+    currentView = view;
+    document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('kanbanView').style.display = view === 'kanban' ? 'block' : 'none';
+    document.getElementById('listView').style.display = view === 'list' ? 'block' : 'none';
+    render();
+  }
+
+  function render() {
+    if (currentView === 'kanban') renderKanban();
+    else renderList();
+    document.getElementById('navLeadsCount').textContent = allLeads.length;
+  }
+
+  function renderKanban() {
+    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
+    let html = '';
+    stages.forEach(stage => {
+      const leads = allLeads.filter(l => l.status === stage.id);
+      html += `<div class="pipeline-stage">
+        <div class="pipeline-stage__header">
+          <div class="pipeline-stage__dot" style="background:${stage.color}"></div>
+          <div class="pipeline-stage__title">${stage.label}</div>
+          <div class="pipeline-stage__count">${leads.length}</div>
+        </div>
+        <div class="pipeline-stage__owner">${stage.owner}</div>
+        ${leads.map(l => {
+          const qu = l.qualificacao;
+          return `<div class="pipeline-card">
+            <div class="pipeline-card__name">${l.nome}</div>
+            <div class="pipeline-card__meta">${l.email}</div>
+            <div class="pipeline-card__pacote">${pacoteLabel[l.pacote] || 'Pacote não informado'} · ${l.origem || 'Origem não informada'}</div>
+            ${qu ? `<div style="margin-top:6px;font-size:0.72rem;color:var(--muted)">${perfilLabel[qu.perfil] || ''} · Nota: ${qu.nota}/10</div>` : ''}
+            <div class="pipeline-card__actions">
+              ${stage.id !== 'fechado' && stage.id !== 'perdido' ? `<button class="action-btn action-btn--success" onclick="advanceLead('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Avançar</button>` : ''}
+              ${!qu ? `<button class="action-btn action-btn--primary" onclick="openQualify('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Qualificar</button>` : ''}
+              <button class="action-btn action-btn--warning" onclick="openHistory('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Histórico</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    });
+    document.getElementById('pipeline').innerHTML = html;
+  }
+
+  function renderList() {
+    if (!allLeads.length) {
+      document.getElementById('leadsTable').innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:40px 0">Nenhum lead registrado.</p>';
+      return;
+    }
+    let html = '<div class="table-wrap"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Pacote</th><th>Origem</th><th>Primeiro contato</th><th>Status</th><th>Qualificação</th><th>Ações</th></tr></thead><tbody>';
+    allLeads.forEach(l => {
+      const qu = l.qualificacao;
+      html += `<tr>
+        <td><strong>${l.nome}</strong></td>
+        <td>${l.email}</td>
+        <td>${pacoteLabel[l.pacote] || 'Não informado'}</td>
+        <td>${l.origem || 'Não informada'}</td>
+        <td>${formatDate(l.data_primeiro_contato || l.data_criacao || l.created_at || '')}</td>
+        <td><span class="badge ${badgeForStatus(l.status === 'novo' ? 'pendente' : l.status === 'em_conversa' ? 'em_analise' : l.status === 'call_marcada' ? 'em_andamento' : l.status === 'proposta_enviada' ? 'em_andamento' : l.status === 'fechado' ? 'pago' : 'cancelado')}"><span class="badge-dot"></span>${stages.find(stage => stage.id === l.status)?.label || l.status}</span></td>
+        <td>${qu ? qu.nota + '/10 · ' + (perfilLabel[qu.perfil] || '') : '<span style="color:var(--muted)">—</span>'}</td>
+        <td>
+          <button class="action-btn action-btn--primary" onclick="openQualify('${l.id}')" title="Qualificar">🔍</button>
+          <button class="action-btn action-btn--warning" onclick="openHistory('${l.id}')" title="Histórico">⏱</button>
+          ${l.status !== 'fechado' && l.status !== 'perdido' ? `<button class="action-btn action-btn--success" onclick="advanceLead('${l.id}')" title="Avançar">→</button>` : ''}
+        </td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('leadsTable').innerHTML = html;
+  }
+
+  function saveLead() {
+    const nome = document.getElementById('leadNome').value.trim();
+    const email = document.getElementById('leadEmail').value.trim();
+    const pacote = document.getElementById('leadPacote').value;
+    const origem = document.getElementById('leadOrigem').value;
+    if (!nome || !email) return toast('Preencha nome e e-mail', 'error');
+    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
+    if (!db.leads) db.leads = [];
+    const dataContato = document.getElementById('leadDataContato').value || new Date().toISOString().slice(0,10);
+    const lead = { id: 'l' + Date.now(), nome, email, pacote, origem, status: 'novo', data_primeiro_contato: dataContato, data_criacao: dataContato, historico: [{ data: dataContato, de: '', para: 'novo', obs: 'Lead criado' }] };
+    db.leads.push(lead);
+    localStorage.setItem('resolutio_db', JSON.stringify(db));
+    closeModal('newLeadModal');
+    document.getElementById('leadNome').value = '';
+    document.getElementById('leadEmail').value = '';
+    document.getElementById('leadDataContato').value = '';
+    toast('Lead salvo!');
+    loadData();
+  }
+
+  function openQualify(id) {
+    const l = allLeads.find(x => x.id === id);
+    if (!l) return;
+    currentQualifyId = id;
+    document.getElementById('qualifyLeadName').textContent = l.nome;
+    const qu = l.qualificacao || {};
+    document.getElementById('qualifyNota').value = qu.nota || '';
+    document.getElementById('qualifyObs').value = qu.obs || '';
+    openModal('qualifyModal');
+  }
+
+  let currentQualifyId = null;
+  function saveQualificacao() {
+    const nota = parseInt(document.getElementById('qualifyNota').value);
+    const interesse = document.getElementById('qualifyInteresse').value;
+    const perfil = document.getElementById('qualifyPerfil').value;
+    const obs = document.getElementById('qualifyObs').value.trim();
+    if (!nota || nota < 1 || nota > 10) return toast('Nota deve ser entre 1 e 10', 'error');
+    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
+    const lead = (db.leads || []).find(l => l.id === currentQualifyId);
+    if (!lead) return;
+    const antigo = lead.status;
+    lead.qualificacao = { nota, interesse, perfil, obs, data: new Date().toISOString().slice(0,10) };
+    if (lead.status === 'novo') {
+      lead.status = 'em_conversa';
+      if (!lead.historico) lead.historico = [];
+      lead.historico.push({ data: new Date().toISOString().slice(0,10), de: antigo, para: 'em_conversa', obs: 'Qualificação registrada' });
+    }
+    localStorage.setItem('resolutio_db', JSON.stringify(db));
+    closeModal('qualifyModal');
+    toast('Qualificação salva!');
+    loadData();
+  }
+
+  let currentAdvanceId = null;
+  function advanceLead(id) {
+    const l = allLeads.find(x => x.id === id);
+    if (!l) return;
+    currentAdvanceId = id;
+    document.getElementById('advanceLeadName').textContent = l.nome;
+    const nextStages = stages.filter(s => s.id !== l.status);
+    document.getElementById('advanceNextStage').innerHTML = nextStages.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+    openModal('advanceModal');
+  }
+
+  function saveAdvance() {
+    const next = document.getElementById('advanceNextStage').value;
+    const obs = document.getElementById('advanceObs').value.trim();
+    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
+    const lead = (db.leads || []).find(l => l.id === currentAdvanceId);
+    if (!lead) return;
+    const antigo = lead.status;
+    lead.status = next;
+    if (!lead.historico) lead.historico = [];
+    lead.historico.push({ data: new Date().toISOString().slice(0,10), de: antigo, para: next, obs: obs || 'Avançado manualmente' });
+    if (next === 'fechado') {
+      if (!db.clientes) db.clientes = [];
+if (!db.clientes.find(c => c.nome === lead.nome)) {
+            db.clientes.push({
+              id: 'c' + Date.now(),
+              avatar: lead.nome.split(' ').map(n=>n[0]).join('').slice(0,2),
+              nome: lead.nome,
+              email: lead.email,
+              pacote: lead.pacote || 'essencial',
+              status: 'ativo',
+              progresso: 0,
+              pilar_atual: 1,
+              pendencias: [],
+              proximo_encontro: new Date(Date.now()+7*86400000).toISOString().slice(0,16).replace('T',' '),
+              funcionario: ''
+            });
+      }
+    }
+    localStorage.setItem('resolutio_db', JSON.stringify(db));
+    closeModal('advanceModal');
+    toast('Lead avançado!');
+    loadData();
+  }
+
+  function openHistory(id) {
+    const l = allLeads.find(x => x.id === id);
+    if (!l) return;
+    let html = `<div style="margin-bottom:12px;font-family:var(--font-display);font-size:1.2rem;color:var(--ink)">${l.nome}</div>`;
+    if (!l.historico || !l.historico.length) {
+      html += '<p style="color:var(--muted);font-size:0.85rem">Nenhum registro de mudança de status.</p>';
+    } else {
+      html += '<div class="timeline" style="padding-left:24px">';
+      l.historico.sort((a,b) => b.data.localeCompare(a.data)).forEach(h => {
+        const deLabel = h.de ? stages.find(s=>s.id===h.de)?.label || h.de : '—';
+        const paraLabel = stages.find(s=>s.id===h.para)?.label || h.para;
+        html += `<div class="history-item">
+          <div class="history-date">${formatDate(h.data)}</div>
+          <div class="history-text">${h.de ? deLabel + ' → ' : ''}<span class="history-badge ${badgeForStatus(h.para === 'novo' ? 'pendente' : h.para === 'em_conversa' ? 'em_analise' : h.para === 'call_marcada' ? 'em_andamento' : h.para === 'proposta_enviada' ? 'em_andamento' : h.para === 'fechado' ? 'pago' : 'cancelado')}">${paraLabel}</span></div>
+          ${h.obs ? `<div style="font-size:0.75rem;color:var(--muted);margin-top:2px">${h.obs}</div>` : ''}
+        </div>`;
+      });
+      html += '</div>';
+    }
+    document.getElementById('historyContent').innerHTML = html;
+    openModal('historyModal');
+  }
+
+  async function loadData() {
+    allLeads = await API.leads.list();
+    render();
+  }
+  loadData();
+</script>
+</body>
+</html>

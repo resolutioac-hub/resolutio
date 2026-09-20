@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resolutio — Assessoria & Consultoria Acadêmica</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="./css/variables.css?v=5">
+<link rel="stylesheet" href="./css/global.css?v=5">
+<link rel="stylesheet" href="./css/components.css?v=5">
+<style>
+  /* ========== LAYOUT ========== */
+  .login { height: 100vh; display: grid; grid-template-columns: 680px 1fr; background: var(--bg); overflow: hidden; }
+
+  /* ========== HERO (mantido como está) ========== */
+  .login__hero {
+    background: var(--primary-deep);
+    background: linear-gradient(160deg, #4a332f 0%, #725047 55%, #8a6b65 100%);
+    padding: 28px 32px;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden; color: #fff;
+  }
+  .login__hero::before {
+    content: ''; position: absolute; top: -10%; right: -12%;
+    width: 560px; height: 500px;
+    background: radial-gradient(ellipse at 30% 30%, rgba(190,176,163,0.22) 0%, rgba(253,246,236,0.08) 38%, transparent 72%);
+    pointer-events: none; border-radius: 42% 58% 62% 38% / 38% 42% 58% 62%;
+    animation: heroBgIn 900ms var(--t) 120ms both, blobFloat 16s ease-in-out infinite 900ms;
+  }
+  .login__hero::after {
+    content: ''; position: absolute; bottom: -14%; left: -8%;
+    width: 420px; height: 380px; border: 1px solid rgba(253,246,236,0.10);
+    border-radius: 58% 42% 38% 62% / 62% 38% 42% 58%; pointer-events: none;
+    animation: heroBgIn 900ms var(--t) 200ms both, blobFloat 18s ease-in-out infinite reverse 900ms;
+  }
+  .login__hero .blob-accent {
+    content: ''; position: absolute; top: 44%; left: 58%;
+    width: 260px; height: 220px;
+    background: linear-gradient(135deg, rgba(190,176,163,0.18) 0%, rgba(253,246,236,0.10) 100%);
+    border-radius: 62% 38% 42% 58% / 58% 42% 38% 62%; filter: blur(18px); pointer-events: none;
+    animation: heroBgIn 800ms var(--t) 280ms both, blobFloat 13s ease-in-out infinite 800ms;
+  }
+  @keyframes heroTextIn { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes heroImageIn { from { opacity: 0; transform: translateX(72px) scale(0.90); } to { opacity: 0.96; transform: translateX(0) scale(1); } }
+  @keyframes heroBgIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes blobFloat { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(6px,-8px) scale(1.02); } }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .login__brand { display: flex; gap: 16px; align-items: center; position: relative; z-index: 2; padding: 14px 18px; background: rgba(255,255,255,0.07); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.14); animation: heroTextIn 800ms var(--t) 100ms both; }
+  .login__logo { width: 96px; height: 96px; border-radius: 50%; background: transparent; padding: 0; flex-shrink: 0; filter: drop-shadow(0 8px 18px rgba(0,0,0,0.18)); position: relative; }
+  .login__logo img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .login__brand h1 { font-size: 1.32rem; font-weight: 800; letter-spacing: 0.14em; line-height: 1; }
+  .login__brand small { display: block; font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.72); margin-top: 5px; font-weight: 600; }
+  .login__bru { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .login__bru-name { font-size: 0.94rem; font-weight: 700; }
+  .login__bru-name em { font-weight: 400; font-size: 0.62rem; color: rgba(255,255,255,0.6); vertical-align: super; }
+  .login__bru-role { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.60); font-weight: 600; }
+
+  .login__content { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2; padding: 16px 0 12px; max-width: 380px; margin-right: 260px; min-height: 0; }
+  .login__eyebrow { font-size: 0.70rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; margin-bottom: 16px; animation: heroTextIn 800ms var(--t) 200ms both; }
+  .login__eyebrow::before { content: ''; width: 24px; height: 2px; background: var(--accent); border-radius: 1px; }
+  .login__title { font-family: var(--font-display); font-size: 1.95rem; font-weight: 600; line-height: 0.95; letter-spacing: -0.03em; animation: heroTextIn 800ms var(--t) 300ms both; }
+  .login__title em { font-style: italic; font-weight: 500; color: #e8d5c5; display: block; font-size: 1.75rem; }
+  .login__subtitle { font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.72); margin-top: 6px; font-weight: 600; animation: heroTextIn 800ms var(--t) 400ms both; }
+  .login__text { font-size: 0.88rem; line-height: 1.6; color: rgba(255,255,255,0.86); margin-top: 12px; animation: heroTextIn 800ms var(--t) 500ms both; }
+  .login__cta { font-size: 0.88rem; font-weight: 800; letter-spacing: 0.045em; color: #fdf6ec; margin-top: 12px; animation: heroTextIn 800ms var(--t) 600ms both; }
+
+  .login__photo { position: absolute; right: 0; bottom: 0; width: 34%; height: 62%; object-fit: cover; object-position: top center; border-radius: 16px 0 0 0; border: 1px solid rgba(255,255,255,0.10); border-right: none; border-bottom: none; box-shadow: -8px -6px 20px rgba(0,0,0,0.14); z-index: 1; animation: heroImageIn 1100ms cubic-bezier(.16,1,.3,1) 500ms both; }
+  .login__fade { position: absolute; right: 14%; top: 10%; width: 36%; height: 68%; background: url('./assets/images/bruna-hero.jpg') center top / cover no-repeat; opacity: 0.06; filter: blur(1px); border-radius: 20px; pointer-events: none; z-index: 0; }
+  .login__footer { display: flex; gap: 10px; align-items: center; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: auto; position: relative; z-index: 2; animation: heroTextIn 800ms var(--t) 800ms both; }
+  .login__footer img { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.16); object-fit: cover; }
+  .login__footer strong { font-size: 0.80rem; color: #fff; }
+  .login__footer span { font-size: 0.68rem; color: rgba(255,255,255,0.60); }
+
+  /* ========== PANEL ========== */
+  .login__panel { display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--cream); position: relative; overflow: hidden; animation: heroBgIn 800ms var(--t) 100ms both; }
+  .login__panel::before { content: ''; position: absolute; top: -60px; right: -60px; width: 380px; height: 380px; background: radial-gradient(ellipse at center, rgba(114,80,71,0.07) 0%, transparent 68%); border-radius: 50%; pointer-events: none; }
+
+  /* ========== CARD ========== */
+  .login__card {
+    width: 100%; max-width: 420px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(253,246,236,0.90) 100%);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.70); border-radius: 20px;
+    padding: 28px 26px 22px;
+    box-shadow: 0 18px 45px rgba(46,33,31,0.08), 0 4px 12px rgba(46,33,31,0.05), inset 0 1px 0 rgba(255,255,255,0.78);
+    position: relative; overflow: hidden;
+    animation: cardIn 800ms var(--t) 400ms both;
+  }
+  .login__card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary) 0%, #8a6b65 50%, var(--bege) 100%); opacity: 0.96; }
+  .login__card::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 420px 220px at 50% 0%, rgba(190,176,163,0.07) 0%, transparent 68%); pointer-events: none; }
+
+  /* Card decorative blob */
+  .login__card-blob {
+    position: absolute; top: -50px; right: -50px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(114,80,71,0.05) 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none;
+    animation: blobFloat 10s ease-in-out infinite;
+  }
+
+  .login__card h3 { font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; color: var(--ink); letter-spacing: -0.02em; line-height: 1.1; }
+  .login__card p { font-size: 0.84rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+  /* ========== ROLE SELECTION ========== */
+  .role-label { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; display: flex; align-items: center; gap: 6px; }
+  .role-label::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+
+  .role-featured {
+    display: flex; align-items: center; gap: 14px; padding: 16px;
+    background: linear-gradient(135deg, #725047 0%, #5e423f 100%);
+    border: 1px solid rgba(114,80,71,0.18); color: #fff; border-radius: 14px;
+    cursor: pointer; box-shadow: 0 6px 20px rgba(114,80,71,0.18);
+    transition: all var(--t); position: relative;
+  }
+  .role-featured:hover { background: var(--primary-600); border-color: var(--primary-600); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(114,80,71,0.24); }
+  .role-featured.is-active { border-color: var(--primary); background: var(--primary); }
+  .role-featured .role__icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.18); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }
+  .role-featured .role__text { flex: 1; text-align: left; }
+  .role-featured strong { font-size: 0.92rem; font-weight: 800; color: #fff; display: block; line-height: 1.1; }
+  .role-featured span { font-size: 0.74rem; color: rgba(255,255,255,0.84); display: block; margin-top: 2px; }
+  .role-featured .role__badge { font-size: 0.60rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; background: #fff; color: var(--primary); padding: 5px 9px; border-radius: 999px; flex-shrink: 0; }
+  .role-featured .role__check { width: 24px; height: 24px; border-radius: 50%; background: #fff; color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; }
+
+  .role-grid--secondary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .role--muted { border: 1px solid var(--line); border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer; background: var(--surface); transition: all var(--t); opacity: 0.88; }
+  .role--muted:hover { border-color: var(--primary-200); background: var(--primary-50); opacity: 1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(46,33,31,0.06); }
+  .role--muted.is-active { border-color: var(--line); background: var(--line-soft); box-shadow: none; opacity: 1; }
+  .role--muted .role__icon { width: 28px; height: 28px; border-radius: 8px; background: var(--line-soft); border: 1px solid var(--line); color: var(--muted); margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+  .role--muted.is-active .role__icon { background: var(--line-soft); color: var(--muted); border-color: var(--line); }
+  .role--muted strong { font-size: 0.76rem; font-weight: 700; color: var(--text); display: block; }
+  .role--muted span { font-size: 0.65rem; color: var(--muted); display: block; margin-top: 2px; }
+
+  /* ========== DIVIDER ========== */
+  .divider { display: flex; align-items: center; gap: 10px; margin: 18px 0; color: var(--text-400); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  /* ========== FORM ========== */
+  .login-type-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+  .login-type-btn { flex: 1; padding: 8px; border-radius: 8px; border: 1.5px solid var(--line); background: #fff; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--muted); transition: all var(--t); font-family: var(--font-sans); }
+  .login-type-btn:hover { border-color: var(--primary-200); }
+  .login-type-btn--active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .login-type-btn--inactive { background: #fff; color: var(--muted); }
+  .input-icon-wrapper { position: relative; }
+  .input-icon-wrapper .form-control { padding: 10px 12px 10px 48px !important; }
+  .input-icon-wrapper .input-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 0.95rem; pointer-events: none;
+    transition: color var(--t);
+  }
+  .input-icon-wrapper:focus-within .input-icon { color: var(--primary); }
+  .input-icon-wrapper .password-toggle {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    cursor: pointer; color: var(--muted); font-size: 0.9rem; opacity: 0.55;
+    transition: opacity var(--t), color var(--t); background: none; border: none; padding: 4px;
+  }
+  .input-icon-wrapper .password-toggle:hover { opacity: 1; color: var(--primary); }
+
+  .form-control {
+    padding: 10px 12px; border-radius: 8px; font-size: 0.82rem; height: 38px;
+    background: linear-gradient(180deg, #fff 0%, #fdfcfa 100%);
+    border: 1px solid var(--line); transition: all var(--t); width: 100%;
+    font-family: var(--font-sans); color: var(--ink);
+  }
+  .form-control:hover { border-color: var(--primary-200); background: #fff; }
+  .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(114,80,71,0.12); }
+  .form-control::placeholder { color: var(--muted); opacity: 0.7; }
+
+  .form-options { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 14px; }
+  .form-options label { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); cursor: pointer; user-select: none; }
+  .form-options label input[type="checkbox"] { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; }
+  .form-options a { font-size: 0.78rem; color: var(--primary); text-decoration: none; font-weight: 600; transition: color var(--t); }
+  .form-options a:hover { color: var(--primary-600); text-decoration: underline; }
+
+  /* ========== BUTTONS ========== */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border-radius: var(--r-10); font-size: 0.84rem; font-weight: 650; border: 1px solid transparent; cursor: pointer; transition: all var(--t); font-family: var(--font-sans); white-space: nowrap; }
+  .btn:active { transform: scale(0.98); }
+  .btn--primary, .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 4px 12px rgba(114,80,71,0.18); }
+  .btn--primary:hover, .btn-primary:hover { background: var(--primary-600); box-shadow: 0 6px 16px rgba(114,80,71,0.22); transform: translateY(-1px); }
+  .btn--secondary, .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--line); }
+  .btn--secondary:hover, .btn-secondary:hover { background: var(--cream); border-color: var(--primary-200); }
+  .btn--block, .btn-block { width: 100%; }
+  .btn svg { width: 14px; height: 14px; }
+
+  /* ========== TOAST ========== */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 10px; }
+  .toast { background: #10B981; color: white; padding: 14px 20px; border-radius: 12px; font-size: 0.88rem; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,0.15); animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 10px; }
+  .toast.toast-error { background: #EF4444; }
+  .toast.toast-info { background: #3B82F6; }
+  .toast i { font-size: 1.1rem; }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 900px) {
+    .login { grid-template-columns: 1fr; }
+    .login__hero { padding: 22px 20px; }
+    .login__title { font-size: 1.65rem; }
+    .login__photo, .login__fade { display: none; }
+    .login__panel { padding: 20px; }
+  }
+  @media (max-height: 760px) and (min-width: 901px) {
+    .login { min-height: 100vh; height: auto; overflow: visible; }
+    .login__hero, .login__panel { min-height: 760px; }
+    .login__content { justify-content: flex-start; padding-top: 34px; }
+    .login__panel { align-items: flex-start; padding-top: 28px; padding-bottom: 28px; overflow: visible; }
+  }
+</style>
+</head>
+<body>
+<div class="login">
+  <!-- ========== HERO (mantido) ========== -->
+  <div class="login__hero">
+    <div class="blob-accent" aria-hidden="true"></div>
+    <div class="login__fade" aria-hidden="true"></div>
+    <img src="./assets/images/bruna-hero.jpg" alt="Dra. Bruna Sirqueira" class="login__photo">
+    <div class="login__brand">
+      <div class="login__logo"><img src="./assets/images/logo-resolutio.jpeg" alt="Resolutio"></div>
+      <div>
+        <h1>RESOLUTIO</h1>
+        <small>Assessoria &amp; Consultoria Acadêmica</small>
+        <div class="login__bru"><div class="login__bru-name"><em>Drª</em> Bruna Sirqueira</div><div class="login__bru-role">Enfermeira e Mentora Acadêmica</div></div>
+      </div>
+    </div>
+
+    <div class="login__content">
+      <div class="login__eyebrow">Mentoria Aprovação Passo a Passo</div>
+      <div class="login__title">APROVAÇÃO<em>PASSO A PASSO</em></div>
+      <div class="login__subtitle">M E N T O R I A</div>
+      <p class="login__text">Olá, me chamo Dra. Bruna Sirqueira e ajudo profissionais da saúde a serem aprovados no mestrado/doutorado, do zero, com apenas 2h/dia de dedicação.</p>
+      <div class="login__cta">VAMOS RUMO À APROVAÇÃO?</div>
+    </div>
+
+    <div class="login__footer">
+      <img src="./assets/images/bruna-perfil.jpg" alt="Dra Bruna">
+      <div><strong>Drª Bruna Sirqueira</strong><br><span>UFMA • Mestra UEPA • Doutora UNESP — 10+ anos</span></div>
+    </div>
+  </div>
+
+  <!-- ========== PANEL ========== -->
+  <div class="login__panel">
+    <div class="login__card">
+      <div class="login__card-blob" aria-hidden="true"></div>
+      <h3>Bem-vinda(o)</h3>
+      <p>Escolha seu perfil. Integração Google via Supabase após token.</p>
+
+      <div class="role-label">Selecione seu acesso</div>
+      <div class="role-featured is-active" data-role="cliente" onclick="selectRole('cliente')">
+        <div class="role__icon"><i class="fas fa-user"></i></div>
+        <div class="role__text"><strong>Cliente</strong><span>Mentorado</span></div>
+        <div class="role__badge">Recomendado</div>
+        <div class="role__check"><i class="fas fa-check"></i></div>
+      </div>
+
+      <div class="role-grid--secondary">
+        <div class="role--muted" data-role="admin" onclick="selectRole('admin')">
+          <div class="role__icon"><i class="fas fa-shield-halved"></i></div>
+          <strong>Admin</strong><span>Acesso administrativo</span>
+        </div>
+        <div class="role--muted" data-role="funcionario" onclick="selectRole('funcionario')">
+          <div class="role__icon"><i class="fas fa-users"></i></div>
+          <strong>Colaborador</strong><span>Equipe</span>
+        </div>
+      </div>
+
+      <div class="divider">ou</div>
+
+      <form onsubmit="handleLogin(event)">
+        <div class="login-type-toggle">
+          <button type="button" class="login-type-btn" id="btnCpf" onclick="setLoginType('cpf')"><i class="fas fa-id-card"></i> CPF</button>
+          <button type="button" class="login-type-btn login-type-btn--inactive" id="btnEmail" onclick="setLoginType('email')"><i class="fas fa-envelope"></i> E-mail</button>
+        </div>
+        <div class="form-group">
+          <label for="email" id="loginLabel">CPF</label>
+          <div class="input-icon-wrapper">
+            <i class="fas fa-id-card input-icon" id="loginIcon"></i>
+            <input type="text" class="form-control" id="email" placeholder="000.000.000-00" required oninput="maskCPF(this)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <div class="input-icon-wrapper">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" class="form-control" id="password" placeholder="••••••••" required>
+            <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Alternar visibilidade da senha">
+              <i class="fas fa-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+        <div class="form-options">
+          <label><input type="checkbox" id="rememberMe"> Lembrar-me</label>
+          <a href="#" onclick="event.preventDefault(); toast('Link de redefinição enviado!','info')">Esqueceu a senha?</a>
+        </div>
+        <button type="submit" class="btn btn--secondary btn--block">
+          <i class="fas fa-right-from-bracket"></i> Entrar com e-mail
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="./js/api.js"></script>
+<script src="./js/auth.js"></script>
+<script src="./js/utils.js"></script>
+<script>
+  let selectedRole='cliente';
+  document.addEventListener('DOMContentLoaded', () => {
+    selectRole('cliente');
+  });
+  function selectRole(role){
+    selectedRole=role;
+    document.querySelectorAll('.role-featured, .role--muted').forEach(el=>el.classList.remove('is-active'));
+    const el = document.querySelector(`[data-role="${role}"]`);
+    if(el) el.classList.add('is-active');
+    const emailEl = document.getElementById('email');
+    if(emailEl) {
+      emailEl.value='';
+      if(role==='cliente'){
+        setLoginType('cpf');
+      } else {
+        setLoginType('email');
+      }
+    }
+  }
+  let loginType='cpf';
+  function maskCPF(input){
+    if(loginType!=='cpf') return;
+    const pos=input.selectionStart;
+    const oldLen=input.value.length;
+    input.value=formatCPF(input.value);
+    const diff=input.value.length-oldLen;
+    input.setSelectionRange(pos+diff,pos+diff);
+  }
+  function setLoginType(type){
+    loginType=type;
+    const emailEl=document.getElementById('email');
+    const label=document.getElementById('loginLabel');
+    const icon=document.getElementById('loginIcon');
+    const btnCpf=document.getElementById('btnCpf');
+    const btnEmail=document.getElementById('btnEmail');
+    if(type==='cpf'){
+      if(emailEl){ emailEl.placeholder='000.000.000-00'; emailEl.value=''; emailEl.removeAttribute('inputmode'); }
+      if(label) label.textContent='CPF';
+      if(icon){ icon.classList.remove('fa-envelope'); icon.classList.add('fa-id-card'); }
+      if(btnCpf){ btnCpf.classList.remove('login-type-btn--inactive'); btnCpf.classList.add('login-type-btn--active'); }
+      if(btnEmail){ btnEmail.classList.remove('login-type-btn--active'); btnEmail.classList.add('login-type-btn--inactive'); }
+    } else {
+      if(emailEl){ emailEl.placeholder='seu@email.com'; emailEl.value=''; emailEl.setAttribute('inputmode','email'); }
+      if(label) label.textContent='E-mail';
+      if(icon){ icon.classList.remove('fa-id-card'); icon.classList.add('fa-envelope'); }
+      if(btnEmail){ btnEmail.classList.remove('login-type-btn--inactive'); btnEmail.classList.add('login-type-btn--active'); }
+      if(btnCpf){ btnCpf.classList.remove('login-type-btn--active'); btnCpf.classList.add('login-type-btn--inactive'); }
+    }
+  }
+  function togglePassword(){
+    const pw = document.getElementById('password');
+    const icon = document.getElementById('eyeIcon');
+    if(pw.type === 'password'){ pw.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+    else { pw.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+  }
+  async function loginWithGoogle(){
+    const identifier = (document.getElementById('email').value || '').trim();
+    const password = document.getElementById('password')?.value || '';
+    if(!identifier){ toast('Informe seu usuário ou e-mail','error'); return; }
+    if(!password){ toast('Informe sua senha','error'); return; }
+    const ok = await verifyCredentials(identifier, password);
+    if(!ok){ toast('Usuário ou senha incorretos.', 'error'); return; }
+    const normalized = identifier.toLowerCase();
+    const isAdmin = normalized === 'admin' || normalized === 'admin@resolutio.com';
+    const client = isAdmin ? null : findClientByIdentifier(normalized);
+    const func = (!isAdmin && !client) ? findFuncionarioByEmail(normalized) : null;
+    let role, user;
+    if (isAdmin) {
+      role = 'admin';
+      user = { email: 'admin@resolutio.com', nome: 'Admin', role: 'admin' };
+    } else if (client) {
+      role = 'cliente';
+      user = { email: client.email, cpf: client.cpf || '', nome: client.nome, role: 'cliente' };
+    } else if (func) {
+      role = 'funcionario';
+      user = { email: func.email, nome: func.nome, role: 'funcionario', id: func.id, funcao: func.funcao };
+    } else {
+      toast('Nenhuma conta encontrada com esse identificador.', 'error');
+      return;
+    }
+    localStorage.setItem('resolutio_role', role);
+    localStorage.setItem('resolutio_user', JSON.stringify(user));
+    if (role === 'cliente' && clienteNeedsPasswordSetup(user)) {
+      window.location.href = './cliente/definir-senha.html';
+      return;
+    }
+    const dest={admin:'./admin/dashboard.html',funcionario:'./funcionario/dashboard.html',cliente:'./cliente/dashboard.html'};
+    window.location.href = dest[role] || './index.html';
+  }
+  function handleLogin(e){
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    if(!email || !password){ toast('Preencha todos os campos','error'); return; }
+    loginWithGoogle();
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  body { font-family: var(--font-body); background: #f7f4ef; color: #1a1715; overflow-x: hidden; }
+
+  /* Sidebar */
+  .sidebar { width: 200px; background: linear-gradient(180deg, #1a1715 0%, #100e0c 100%); border-right: 1px solid rgba(255,255,255,0.06); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
+  .sidebar__brand { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; }
+  .nav__label { font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 20px 16px 8px; font-weight: 700; }
+  .nav__item { color: rgba(255,255,255,0.55); font-size: 0.82rem; padding: 10px 16px; border-radius: 10px; transition: all 200ms ease; display: flex; align-items: center; gap: 10px; text-decoration: none; margin: 2px 8px; }
+  .nav__item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); }
+  .nav__item--active { background: rgba(190,176,163,0.15); color: #beb0a3; font-weight: 600; }
+  .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: 0.7; }
+  .nav__item--active .nav__icon { opacity: 1; }
+  .nav__icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .sidebar__footer { margin-top: auto; padding: 16px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .user { border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; }
+  .user__avatar { background: linear-gradient(135deg, #725047, #5e3d2a); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: #fff; flex-shrink: 0; }
+  .user__name { color: rgba(255,255,255,0.85); font-weight: 600; font-size: 0.78rem; }
+  .user__email { color: rgba(255,255,255,0.35); font-size: 0.64rem; margin-top: 1px; }
+
+  /* Main */
+  .main { flex: 1; margin-left: 200px; min-height: 100vh; }
+  .topbar { height: 64px; background: rgba(247,244,239,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(30,21,19,0.06); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 50; }
+  .topbar__title { font-size: 0.92rem; font-weight: 700; color: #1a1715; }
+  .page { padding: 24px 32px 48px; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+  /* Meeting banner */
+  .meeting-banner {
+    background: linear-gradient(135deg, #1a1715 0%, #2a201c 50%, #3d2e26 100%);
+    border: 1px solid rgba(190,176,163,0.15);
+    border-radius: 16px; padding: 24px 28px; margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    position: relative; overflow: hidden;
+    animation: fadeSlideUp 0.7s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .meeting-banner::before {
+    content: ''; position: absolute; top: 0; right: 0; width: 200px; height: 100%;
+    background: radial-gradient(circle at 100% 50%, rgba(190,176,163,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .meeting-banner__pulse {
+    width: 10px; height: 10px; border-radius: 50%; background: #10b981; flex-shrink: 0;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(16,185,129,0); } }
+  .meeting-banner__live {
+    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #10b981; display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  }
+  .meeting-banner__title {
+    font-family: var(--font-display); font-size: 1.4rem; font-weight: 400;
+    color: #fff; line-height: 1.2;
+  }
+  .meeting-banner__time {
+    font-size: 0.82rem; color: rgba(255,255,255,0.45); margin-top: 4px;
+  }
+  .meeting-banner__left { position: relative; }
+  .meeting-banner__btn {
+    background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none;
+    padding: 12px 24px; border-radius: 12px; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    transition: all 200ms; white-space: nowrap; position: relative; flex-shrink: 0;
+  }
+  .meeting-banner__btn:hover { background: linear-gradient(135deg, #059669, #047857); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.3); }
+  .meeting-banner__btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .meeting-banner__countdown {
+    font-size: 0.72rem; color: rgba(255,255,255,0.35); margin-top: 6px;
+  }
+  .meeting-banner--soon { border-color: rgba(245,158,11,0.2); }
+  .meeting-banner--soon .meeting-banner__pulse { background: #f59e0b; animation-name: pulseAmber; }
+  @keyframes pulseAmber { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245,158,11,0.4); } 50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(245,158,11,0); } }
+  .meeting-banner--soon .meeting-banner__live { color: #f59e0b; }
+  .meeting-banner--soon .meeting-banner__btn { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .meeting-banner--soon .meeting-banner__btn:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+
+  /* Animations */
+  @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes countUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .anim { opacity: 0; transform: translateY(20px); }
+  .anim.is-visible { animation: fadeSlideUp 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+
+  /* Welcome */
+  .welcome {
+    background: linear-gradient(140deg, #2a201c 0%, #3d2e26 40%, #4a3630 100%);
+    border-radius: 20px; padding: 36px 40px; color: #fff; margin-bottom: 24px;
+    position: relative; overflow: hidden;
+  }
+  .welcome::before {
+    content: ''; position: absolute; top: -40%; right: -10%; width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(190,176,163,0.12) 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none;
+  }
+  .welcome::after {
+    content: ''; position: absolute; bottom: -20%; left: 20%; width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(190,176,163,0.08) 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none;
+  }
+  .welcome__eyebrow {
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(255,255,255,0.4); margin-bottom: 10px; position: relative;
+  }
+  .welcome h1 {
+    font-family: var(--font-display); font-size: 2rem; font-weight: 300;
+    letter-spacing: -0.02em; line-height: 1.15; position: relative;
+  }
+  .welcome h1 em { font-style: italic; color: #beb0a3; }
+  .welcome p {
+    font-size: 0.84rem; color: rgba(255,255,255,0.45); margin-top: 8px;
+    line-height: 1.55; max-width: 480px; position: relative;
+  }
+
+  /* KPIs */
+  .kpi-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card {
+    background: #fff; border: 1px solid rgba(30,21,19,0.08); border-radius: 16px;
+    padding: 22px 24px; position: relative; overflow: hidden;
+    transition: transform 200ms, box-shadow 200ms;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(30,21,19,0.06); }
+  .kpi-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+  .kpi-card--progress::before { background: linear-gradient(90deg, #725047, #beb0a3); }
+  .kpi-card--encontros::before { background: linear-gradient(90deg, #10b981, #34d399); }
+  .kpi-icon {
+    width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; margin-bottom: 14px;
+  }
+  .kpi-icon--progress { background: rgba(114,80,71,0.08); color: #725047; }
+  .kpi-icon--encontros { background: rgba(16,185,129,0.08); color: #10b981; }
+  .kpi-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .kpi-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: #9a8c82; }
+  .kpi-value { font-family: var(--font-display); font-size: 2rem; font-weight: 400; color: #1a1715; margin-top: 4px; letter-spacing: -0.03em; }
+  .kpi-sub { font-size: 0.72rem; color: #9a8c82; margin-top: 4px; }
+  .progress-track { height: 6px; background: #f0ebe4; border-radius: 999px; overflow: hidden; margin-top: 14px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #725047, #a8836f); border-radius: 999px; transition: width 1.2s cubic-bezier(0.22,1,0.36,1); }
+
+  /* Section */
+  .section { margin-bottom: 24px; }
+  .section__head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
+  .section__title {
+    font-family: var(--font-display); font-size: 1.3rem; font-weight: 400;
+    color: #1a1715; letter-spacing: -0.01em;
+  }
+  .section__link { font-size: 0.72rem; font-weight: 600; color: #725047; text-decoration: none; letter-spacing: 0.02em; }
+  .section__link:hover { text-decoration: underline; }
+
+  /* MAPP */
+  .mapp-track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .mapp-step {
+    border-radius: 14px; padding: 20px 16px; text-align: center; position: relative;
+    border: 1px solid rgba(30,21,19,0.08); background: #fff;
+    transition: transform 200ms, box-shadow 200ms;
+  }
+  .mapp-step:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30,21,19,0.06); }
+  .mapp-step--done { background: #f0fdf4; border-color: rgba(16,185,129,0.2); }
+  .mapp-step--current { background: linear-gradient(140deg, #fdf8f4, #f9f1ea); border-color: rgba(114,80,71,0.25); box-shadow: 0 4px 20px rgba(114,80,71,0.08); }
+  .mapp-step--next { background: #fffbeb; border-color: rgba(245,158,11,0.15); }
+  .mapp-num {
+    width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center;
+    justify-content: center; font-size: 0.68rem; font-weight: 800; margin-bottom: 10px;
+  }
+  .mapp-step--done .mapp-num { background: #dcfce7; color: #16a34a; }
+  .mapp-step--current .mapp-num { background: #725047; color: #fff; }
+  .mapp-step--next .mapp-num { background: #fef3c7; color: #d97706; }
+  .mapp-step--wait .mapp-num { background: #f3f0eb; color: #9a8c82; }
+  .mapp-name { font-size: 0.82rem; font-weight: 700; color: #1a1715; margin-bottom: 4px; }
+  .mapp-desc { font-size: 0.68rem; color: #9a8c82; line-height: 1.4; }
+  .mapp-step--done .mapp-name, .mapp-step--current .mapp-name { color: #1a1715; }
+  .mapp-badge {
+    position: absolute; top: 10px; right: 10px; font-size: 0.56rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
+  }
+  .mapp-step--done .mapp-badge { background: #dcfce7; color: #16a34a; }
+  .mapp-step--current .mapp-badge { background: #725047; color: #fff; }
+
+  /* Cards grid */
+  .cards-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card {
+    background: #fff; border: 1px solid rgba(30,21,19,0.08); border-radius: 16px;
+    padding: 22px 24px; min-height: 200px;
+  }
+  .card__title {
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #9a8c82; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .card__title svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Meet card */
+  .meet {
+    display: flex; align-items: center; gap: 14px; padding: 14px 0;
+    border-bottom: 1px solid rgba(30,21,19,0.05);
+  }
+  .meet:last-child { border-bottom: none; }
+  .meet__date {
+    width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(140deg, #fdf8f4, #f4efe8);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex-shrink: 0; border: 1px solid rgba(30,21,19,0.06);
+  }
+  .meet__date-day { font-size: 1rem; font-weight: 800; color: #725047; line-height: 1; }
+  .meet__date-month { font-size: 0.56rem; font-weight: 700; color: #9a8c82; text-transform: uppercase; letter-spacing: 0.05em; }
+  .meet__info { flex: 1; min-width: 0; }
+  .meet__title { font-size: 0.82rem; font-weight: 700; color: #1a1715; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meet__time { font-size: 0.72rem; color: #9a8c82; margin-top: 2px; }
+  .meet__status {
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; padding: 4px 10px;
+    border-radius: 999px; white-space: nowrap;
+  }
+  .meet__status--agendado { background: #eff6ff; color: #3b82f6; }
+  .meet__status--realizado { background: #f0fdf4; color: #16a34a; }
+  .meet__status--cancelado { background: #fef2f2; color: #dc2626; }
+
+  /* Payment */
+  .pay {
+    display: flex; align-items: center; gap: 14px; padding: 14px 0;
+    border-bottom: 1px solid rgba(30,21,19,0.05);
+  }
+  .pay:last-child { border-bottom: none; }
+  .pay__icon {
+    width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .pay__icon--pago { background: #f0fdf4; color: #16a34a; }
+  .pay__icon--pendente { background: #fffbeb; color: #d97706; }
+  .pay__icon--atrasado { background: #fef2f2; color: #dc2626; }
+  .pay__icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .pay__info { flex: 1; }
+  .pay__label { font-size: 0.82rem; font-weight: 700; color: #1a1715; }
+  .pay__date { font-size: 0.72rem; color: #9a8c82; margin-top: 2px; }
+  .pay__value { font-size: 0.88rem; font-weight: 700; color: #1a1715; white-space: nowrap; }
+  .empty { padding: 24px 0; text-align: center; }
+  .empty__icon { width: 40px; height: 40px; border-radius: 50%; background: #f3f0eb; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: #9a8c82; }
+  .empty__icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .empty__text { font-size: 0.82rem; color: #9a8c82; }
+  .empty__text--success { color: #16a34a; font-weight: 600; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .page { padding: 16px; }
+    .kpi-row { grid-template-columns: 1fr; }
+    .cards-row { grid-template-columns: 1fr; }
+    .mapp-track { grid-template-columns: repeat(2, 1fr); }
+    .welcome { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <img src="../assets/images/logo-branca.png" alt="Resolutio" style="width:100%;max-width:160px;height:auto;object-fit:contain">
+    </div>
+    <nav class="sidebar__nav">
+      <div class="nav__label">Menu</div>
+      <a class="nav__item nav__item--active" href="./dashboard.html"><span class="nav__icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Início</a>
+      <a class="nav__item" href="./agendar.html"><span class="nav__icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Agendar encontro</a>
+      <a class="nav__item" href="./encontros.html"><span class="nav__icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span> Meus encontros</a>
+      <a class="nav__item" href="./materiais.html"><span class="nav__icon"><svg viewBox="0 0 24 24"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span> Materiais</a>
+      <a class="nav__item" href="./pagamentos.html"><span class="nav__icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg></span> Pagamentos</a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user"><div class="user__avatar" id="userAvatar">CL</div><div><div class="user__name" id="userName">Cliente</div><div class="user__email" id="userEmail">cliente@email.com</div></div></div>
+      <button class="btn btn--danger btn--sm" style="width:100%;margin-top:10px" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('is-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div class="topbar__title">Meu painel</div>
+      </div>
+    </header>
+
+    <div class="page">
+      <!-- Welcome -->
+      <div class="welcome anim">
+        <div class="welcome__eyebrow">Mentoria MAPP</div>
+        <h1>Olá, <em id="clientName">cliente</em></h1>
+        <p>Acompanhe sua jornada rumo à aprovação. Cada passo te leva mais perto do seu objetivo.</p>
+      </div>
+
+      <!-- Meeting Banner -->
+      <div id="meetingBanner" style="display:none"></div>
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi-card kpi-card--progress anim">
+          <div class="kpi-icon kpi-icon--progress">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="kpi-label">Progresso geral</div>
+          <div class="kpi-value" id="kpiProgresso">0%</div>
+          <div class="progress-track"><div class="progress-fill" id="kpiProgressBar" style="width:0%"></div></div>
+        </div>
+        <div class="kpi-card kpi-card--encontros anim">
+          <div class="kpi-icon kpi-icon--encontros">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-label">Encontros realizados</div>
+          <div class="kpi-value" id="kpiEncontros">0</div>
+          <div class="kpi-sub" id="kpiEncontrosPrevistos">de 12 previstos</div>
+        </div>
+      </div>
+
+      <!-- MAPP -->
+      <div class="section anim">
+        <div class="section__head">
+          <h2 class="section__title">Jornada MAPP</h2>
+        </div>
+        <div class="mapp-track" id="mappGrid"></div>
+      </div>
+
+      <!-- Encontros + Pagamentos -->
+      <div class="cards-row">
+        <div class="card anim">
+          <div class="card__title">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            Próximos encontros
+          </div>
+          <div id="encontrosList"></div>
+        </div>
+        <div class="card anim">
+          <div class="card__title">
+            <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg>
+            Pagamentos
+          </div>
+          <div id="pagamentosList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  requireAuth(['cliente']); setupSidebar();
+
+  const pacoteLabel = { excelencia: 'Excelência', estrategico: 'Estratégico', essencial: 'Essencial' };
+  const PILLAR_DESC = [
+    'Diagnóstico do perfil e dos programas ideais',
+    'Pré-projeto alinhado ao edital e à banca',
+    'Simulação com feedback e argumentação',
+    'Submissão completa e onboarding acadêmico'
+  ];
+
+  function renderMapp(pilar) {
+    const grid = document.getElementById('mappGrid');
+    grid.innerHTML = PILARES.map((nome, i) => {
+      const num = i + 1;
+      const done = num < pilar;
+      const current = num === pilar;
+      let cls = '', badge = '';
+      if (done) { cls = 'mapp-step--done'; badge = '<div class="mapp-badge">Feito</div>'; }
+      else if (current) { cls = 'mapp-step--current'; badge = '<div class="mapp-badge">Atual</div>'; }
+      else if (num === pilar + 1) { cls = 'mapp-step--next'; }
+      else { cls = 'mapp-step--wait'; }
+      return `<div class="mapp-step ${cls}">
+        ${badge}
+        <div class="mapp-num">${num}</div>
+        <div class="mapp-name">${nome}</div>
+        <div class="mapp-desc">${PILLAR_DESC[i]}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderEmpty(icon, text, success) {
+    return `<div class="empty">
+      <div class="empty__icon">${icon}</div>
+      <div class="empty__text${success ? ' empty__text--success' : ''}">${text}</div>
+    </div>`;
+  }
+
+  async function load() {
+    const user = getSession().user;
+    const nome = user?.nome || user?.email?.split('@')[0] || 'cliente';
+    document.getElementById('clientName').textContent = nome.split(' ')[0];
+
+    const clientes = await API.clientes.list();
+    const cliente = clientes.find(c => c.nome === nome || c.email === user?.email);
+
+    if (cliente) {
+      const pilar = clientePilar(cliente);
+      const pct = pilarProgresso(pilar);
+      document.getElementById('kpiProgresso').textContent = pct + '%';
+      document.getElementById('kpiProgressBar').style.width = pct + '%';
+      renderMapp(pilar);
+    }
+
+    const encontros = await API.encontros.list();
+    const meusEncontros = encontros.filter(e => e.cliente === nome);
+
+    // Auto-detect atraso: encounters past time still marked as agendado
+    const now = new Date();
+    meusEncontros.forEach(e => {
+      if (e.status === 'agendado') {
+        const dt = new Date(e.data.replace(' ', 'T'));
+        // If past by more than 1 hour, mark as atrasado
+        if (now - dt > 3600000) {
+          e.status = 'atrasado';
+          const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
+          if (db.encontros) {
+            const dbEv = db.encontros.find(x => x.id === e.id);
+            if (dbEv) { dbEv.status = 'atrasado'; localStorage.setItem('resolutio_db', JSON.stringify(db)); }
+          }
+        }
+      }
+    });
+
+    const realizados = meusEncontros.filter(e => e.status === 'realizado');
+    document.getElementById('kpiEncontros').textContent = realizados.length;
+
+    const totalByPacote = { essencial: 6, estrategico: 8, excelencia: 12 };
+    const total = totalByPacote[cliente?.pacote] || 12;
+    document.getElementById('kpiEncontrosPrevistos').textContent = 'de ' + total + ' previstos';
+
+    // Meeting banner: find next upcoming encounter with meet link
+    const bannerEl = document.getElementById('meetingBanner');
+    const upcomingWithLink = meusEncontros
+      .filter(e => e.status === 'agendado' && e.meet)
+      .sort((a, b) => a.data.localeCompare(b.data));
+
+    if (upcomingWithLink.length > 0) {
+      const next = upcomingWithLink[0];
+      const dt = new Date(next.data.replace(' ', 'T'));
+      const diffMs = dt - now;
+      const diffMin = Math.round(diffMs / 60000);
+      const diffH = Math.round(diffMs / 3600000);
+
+      let liveLabel, liveClass, timeText;
+      if (diffMs <= 0 && diffMs > -3600000) {
+        liveLabel = 'AO VIVO';
+        liveClass = '';
+        timeText = 'Comecou agora — entre na sala!';
+      } else if (diffMin > 0 && diffMin <= 30) {
+        liveLabel = 'EM BREVE';
+        liveClass = 'meeting-banner--soon';
+        timeText = `Comeca em ${diffMin} minuto${diffMin > 1 ? 's' : ''}`;
+      } else if (diffH > 0) {
+        liveLabel = 'PROXIMA REUNIAO';
+        liveClass = '';
+        const hh = dt.getHours().toString().padStart(2, '0');
+        const mm = dt.getMinutes().toString().padStart(2, '0');
+        timeText = `Hoje as ${hh}:${mm}`;
+      } else {
+        liveLabel = 'PROXIMA REUNIAO';
+        liveClass = '';
+        const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+        timeText = `${dt.getDate()} ${meses[dt.getMonth()]} as ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
+      }
+
+      bannerEl.innerHTML = `<div class="meeting-banner ${liveClass}">
+        <div class="meeting-banner__left">
+          <div class="meeting-banner__live">
+            <span class="meeting-banner__pulse"></span>
+            ${liveLabel}
+          </div>
+          <div class="meeting-banner__title">${next.titulo}</div>
+          <div class="meeting-banner__time">${timeText}</div>
+        </div>
+        <a href="${next.meet}" target="_blank" class="meeting-banner__btn">
+          <svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.447.894L15 14"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
+          Acessar sala
+        </a>
+      </div>`;
+      bannerEl.style.display = 'block';
+    } else {
+      bannerEl.style.display = 'none';
+    }
+
+    // Upcoming encounters list
+    const proximos = meusEncontros.filter(e => e.status !== 'realizado').sort((a,b) => a.data.localeCompare(b.data));
+    const el = document.getElementById('encontrosList');
+    if (proximos.length) {
+      el.innerHTML = proximos.slice(0, 4).map(e => {
+        const dt = new Date(e.data.replace(' ','T'));
+        const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+        return `<div class="meet">
+          <div class="meet__date">
+            <div class="meet__date-day">${dt.getDate()}</div>
+            <div class="meet__date-month">${meses[dt.getMonth()]}</div>
+          </div>
+          <div class="meet__info">
+            <div class="meet__title">${e.titulo}</div>
+            <div class="meet__time">${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+          <span class="meet__status meet__status--agendado">Agendado</span>
+        </div>`;
+      }).join('');
+    } else {
+      el.innerHTML = renderEmpty('<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4"/></svg>', 'Nenhum encontro agendado');
+    }
+
+    const pagamentos = await API.pagamentos.list();
+    const meusPagamentos = pagamentos.filter(p => p.cliente === nome);
+    const pendentes = meusPagamentos.filter(p => p.status !== 'pago');
+    const pel = document.getElementById('pagamentosList');
+    if (pendentes.length) {
+      pel.innerHTML = pendentes.slice(0, 4).map(p => {
+        const statusCls = p.status === 'atrasado' ? 'atrasado' : 'pendente';
+        const statusIcon = p.status === 'atrasado'
+          ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>'
+          : '<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg>';
+        return `<div class="pay">
+          <div class="pay__icon pay__icon--${statusCls}">${statusIcon}</div>
+          <div class="pay__info">
+            <div class="pay__label">${p.parcelas || 'Parcela'}</div>
+            <div class="pay__date">Vence: ${formatDate(p.vencimento)}</div>
+          </div>
+          <div class="pay__value">${formatCurrency(p.valor)}</div>
+        </div>`;
+      }).join('');
+    } else {
+      pel.innerHTML = renderEmpty('<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', 'Pagamentos em dia!', true);
+    }
+  }
+  load();
+
+  // Reveal on scroll
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.anim').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight) { el.classList.add('is-visible'); }
+    else { obs.observe(el); }
+  });
+</script>
+</body>
+</html>

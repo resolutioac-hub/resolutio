@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Definir nova senha — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: linear-gradient(170deg, #fcfaf6 0%, #f4efe8 100%); color: #1a1715; }
+  .card { width: 100%; max-width: 430px; background: #fff; border: 1.5px solid var(--line); border-radius: 24px; padding: 40px 36px; box-shadow: 0 24px 70px rgba(42,30,20,0.14); position: relative; overflow: hidden; }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--primary), var(--bege)); }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+  .brand__logo { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--primary-200); overflow: hidden; flex-shrink: 0; }
+  .brand__logo img { width: 100%; height: 100%; object-fit: cover; }
+  .brand__title { font-size: 0.95rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary-700); }
+  .brand__sub { font-size: 0.60rem; letter-spacing: 0.10em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font-family: var(--font-display); font-size: 1.9rem; font-weight: 400; color: var(--ink); }
+  .lead { font-size: 0.85rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+  .lead strong { color: var(--primary); }
+  .form-group { margin-top: 20px; }
+  .form-group label { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+  .form-control { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 0.92rem; font-family: var(--font-body); background: #fcfbf8; color: var(--ink); outline: none; transition: border-color 150ms ease, box-shadow 150ms ease; }
+  .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-50); background: #fff; }
+  .btn { width: 100%; margin-top: 24px; padding: 13px 18px; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 800; letter-spacing: 0.03em; font-family: var(--font-body); cursor: pointer; transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease; }
+  .btn--primary { background: linear-gradient(135deg, var(--primary), var(--primary-700)); color: #fff; box-shadow: 0 10px 24px rgba(114,80,71,0.30); }
+  .btn--primary:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(114,80,71,0.38); }
+  .btn--ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--line); margin-top: 12px; font-weight: 600; }
+  .btn--ghost:hover { color: var(--ink); border-color: var(--primary-200); }
+  .hint { margin-top: 18px; padding: 12px 14px; background: var(--primary-50); border: 1px solid var(--primary-200); border-radius: 12px; font-size: 0.76rem; color: var(--primary-700); }
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 10px; }
+  .toast { color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 0.85rem; box-shadow: 0 8px 24px rgba(0,0,0,0.15); animation: slideIn 0.2s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="brand__logo"><img src="../assets/images/logo-resolutio.jpeg" alt="Resolutio"></div>
+    <div>
+      <div class="brand__title">Resolutio</div>
+      <div class="brand__sub">Mentoria Acadêmica</div>
+    </div>
+  </div>
+
+  <h1 id="welcomeTitle">Primeiro acesso</h1>
+  <p class="lead">Olá, <strong id="welcomeName"></strong>! Por segurança, defina agora a sua nova senha de acesso.</p>
+
+  <div class="form-group">
+    <label for="newPassword">Nova senha</label>
+    <input id="newPassword" class="form-control" type="password" minlength="6" placeholder="Mínimo de 6 caracteres">
+  </div>
+  <div class="form-group">
+    <label for="newPasswordConfirm">Confirmar nova senha</label>
+    <input id="newPasswordConfirm" class="form-control" type="password" minlength="6" placeholder="Repita a nova senha">
+  </div>
+
+  <button class="btn btn--primary" id="saveBtn" type="button">Salvar nova senha</button>
+  <button class="btn btn--ghost" type="button" onclick="logout()">Sair</button>
+
+  <div class="hint">Sua senha inicial era <strong>123</strong>. Após salvar, você entra com e-mail ou CPF e a nova senha.</div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  requireAuth(['cliente']);
+
+  const { user } = getSession();
+  const name = user?.nome || 'bem-vindo(a)';
+  document.getElementById('welcomeName').textContent = name;
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    const senha = document.getElementById('newPassword').value;
+    const confirmacao = document.getElementById('newPasswordConfirm').value;
+    if (!senha || !confirmacao) return toast('Preencha os dois campos.', 'error');
+    if (senha.length < 6) return toast('A senha deve ter pelo menos 6 caracteres.', 'error');
+    if (senha !== confirmacao) return toast('As senhas não conferem. Tente novamente.', 'error');
+    saveInitialPassword(senha);
+    toast('Senha definida com sucesso!');
+    setTimeout(() => { window.location.href = './dashboard.html'; }, 900);
+  });
+
+  document.querySelectorAll('#newPassword, #newPasswordConfirm').forEach(i => {
+    i.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('saveBtn').click(); });
+  });
+</script>
+</body>
+</html>

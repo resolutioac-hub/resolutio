@@ -1,0 +1,498 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agendar Encontro — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  body { font-family: var(--font-body); background: linear-gradient(170deg, #fcfaf6 0%, #f4efe8 100%); color: #1a1715; overflow-x: hidden; }
+  .sidebar { width: 200px; background: linear-gradient(180deg, #1a1715 0%, #100e0c 100%); border-right: 1px solid var(--line); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; box-shadow: 6px 0 20px rgba(30,21,19,0.04); }
+  .sidebar__brand { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; }
+  .sidebar__logo { width: 44px; height: 44px; border-radius: 50%; background: var(--primary-50); border: 1px solid var(--primary-200); padding: 2px; margin-bottom: 12px; }
+  .sidebar__logo img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .sidebar__title { font-family: var(--font-body); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.15em; color: #fff; text-transform: uppercase; text-align: center; width: 100%; }
+  .nav__label { font-family: var(--font-body); font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 18px 14px 8px; }
+  .nav__item { color: var(--text); font-size: 0.82rem; padding: 10px 14px; border-radius: 10px; transition: background 150ms ease; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav__item:hover { background: var(--primary-50); color: var(--primary-700); }
+  .nav__item--active { background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(114,80,71,0.25); }
+  .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+  .nav__icon svg { width: 16px; height: 16px; }
+  .sidebar__footer { padding: 16px; border-top: 1px solid var(--line-soft); }
+  .user { background: rgba(255,255,255,0.8); border-radius: 14px; padding: 12px; border: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .user__avatar { background: linear-gradient(135deg, var(--primary), var(--primary-700)); box-shadow: 0 4px 12px rgba(114,80,71,0.25); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.72rem; color: #fff; }
+  .user__name { color: var(--ink); font-weight: 600; font-size: 0.80rem; }
+  .user__email { color: var(--muted); font-size: 0.66rem; }
+  .main { flex: 1; margin-left: 200px; min-height: 100vh; }
+  .topbar { height: 56px; background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 50; }
+  .topbar__title { font-family: var(--font-body); font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+  .topbar__subtitle { font-size: 0.80rem; color: var(--muted); }
+  .page { padding: 28px 32px; max-width: 960px; width: 100%; margin: 0 auto; }
+  @keyframes riseUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-up { opacity: 0; transform: translateY(28px); }
+  .anim-up.is-visible { animation: riseUp 0.9s cubic-bezier(0.22,1,0.36,1) both; }
+  .section-card { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 28px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); margin-bottom: 20px; }
+  .section-card__title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 400; color: var(--ink); margin-bottom: 8px; }
+  .section-card__sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  /* Calendar */
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .cal-month { font-family: var(--font-display); font-size: 1.6rem; font-weight: 400; color: var(--ink); letter-spacing: -0.02em; }
+  .cal-nav { display: flex; gap: 8px; }
+  .cal-nav button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 150ms; }
+  .cal-nav button:hover { background: var(--primary-50); color: var(--primary); border-color: var(--primary-200); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-weekday { text-align: center; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase; color: var(--muted); padding: 8px 0; }
+  .cal-day { aspect-ratio: 1; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 600; color: var(--ink); cursor: pointer; transition: all 150ms; border: 2px solid transparent; position: relative; }
+  .cal-day:hover { background: var(--primary-50); border-color: var(--primary-200); }
+  .cal-day--empty { cursor: default; }
+  .cal-day--empty:hover { background: transparent; border-color: transparent; }
+  .cal-day--today { background: var(--primary); color: #fff; font-weight: 800; box-shadow: 0 4px 12px rgba(114,80,71,0.25); }
+  .cal-day--today:hover { background: var(--primary-600); border-color: var(--primary); }
+  .cal-day--selected { border-color: var(--primary); background: var(--primary-50); }
+  .cal-day--has-slots::after { content: ''; position: absolute; bottom: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--info); }
+  .cal-day--has-slots { font-weight: 800; color: var(--info); background: #eef2f7; }
+  .cal-day--has-slots:hover { background: #dde5f0; }
+  .cal-day--disabled { color: var(--line); cursor: default; }
+  .cal-day--disabled:hover { background: transparent; border-color: transparent; }
+  .cal-day--has-my-event::after { content: ''; position: absolute; bottom: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .cal-legend { display: flex; gap: 20px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+  .cal-legend__item { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); }
+  .cal-legend__dot { width: 8px; height: 8px; border-radius: 50%; }
+  .cal-legend__dot--slot { background: var(--info); }
+  .cal-legend__dot--event { background: var(--success); }
+  /* Layout */
+  .agenda-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; }
+  /* Side panel */
+  .day-panel { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); min-height: 400px; }
+  .day-panel__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--line-soft); }
+  .day-panel__date { font-family: var(--font-display); font-size: 1.2rem; font-weight: 400; color: var(--ink); }
+  .time-slot { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; margin-bottom: 8px; transition: all 200ms; cursor: pointer; border: 2px solid transparent; }
+  .time-slot--available { background: linear-gradient(135deg, #eaf3e8, #f5faf4); border: 1px solid #c8dfcc; }
+  .time-slot--available:hover { border-color: var(--info); background: #dde5f0; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,93,122,0.15); }
+  .time-slot--selected { border-color: var(--primary) !important; background: var(--primary-50) !important; box-shadow: 0 4px 16px rgba(114,80,71,0.2); }
+  .time-slot__time { font-size: 1rem; font-weight: 700; color: var(--ink); min-width: 50px; }
+  .time-slot__info { flex: 1; font-size: 0.78rem; color: var(--muted); }
+  .time-slot__check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; transition: all 150ms; flex-shrink: 0; }
+  .time-slot--selected .time-slot__check { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .empty-slots { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-slots svg { width: 40px; height: 40px; margin: 0 auto 12px; opacity: 0.25; }
+  /* Booking form */
+  .booking-form { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line-soft); }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.76rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; letter-spacing: 0.02em; }
+  .form-control { width: 100%; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 0.86rem; color: var(--ink); background: #fff; transition: border-color 200ms, box-shadow 200ms; }
+  .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(114,80,71,0.12); }
+  textarea.form-control { min-height: 80px; resize: vertical; }
+  .hint { font-size: 0.73rem; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  /* My events */
+  .my-event { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; margin-bottom: 8px; background: linear-gradient(135deg, #fdf6ec, #fef9f0); border: 1px solid #e8d5c5; }
+  .my-event__time { font-size: 0.92rem; font-weight: 700; color: var(--ink); min-width: 50px; }
+  .my-event__info { flex: 1; }
+  .my-event__title { font-weight: 700; font-size: 0.86rem; color: var(--ink); }
+  .my-event__date { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+  .my-event__cancel { padding: 6px 12px; border-radius: 8px; border: 1px solid #e8c9c9; background: #fff; color: var(--danger); font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: all 150ms; font-family: inherit; white-space: nowrap; }
+  .my-event__cancel:hover { background: var(--danger-bg); }
+  @media (max-width: 860px) { .agenda-layout { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .page { padding: 16px; } .cal-grid { gap: 2px; } .cal-day { font-size: 0.78rem; border-radius: 10px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <img src="../assets/images/logo-branca.png" alt="Resolutio" style="width:100%;max-width:180px;height:auto;object-fit:contain">
+    </div>
+    <nav class="sidebar__nav">
+      <div class="nav__label">Menu</div>
+      <a class="nav__item" href="./dashboard.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Início</a>
+      <a class="nav__item nav__item--active" href="./agendar.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Agendar encontro</a>
+      <a class="nav__item" href="./encontros.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Meus encontros</a>
+      <a class="nav__item" href="./materiais.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span> Materiais</a>
+      <a class="nav__item" href="./pagamentos.html"><span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg></span> Pagamentos</a>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user"><div class="user__avatar" id="userAvatar">CL</div><div><div class="user__name" id="userName">Cliente</div><div class="user__email" id="userEmail">cliente@email.com</div></div></div>
+      <button class="btn btn--danger btn--sm" style="width:100%;margin-top:10px" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('is-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div>
+          <div class="topbar__title">Agendar encontro</div>
+          <div class="topbar__subtitle">Escolha um dia com horários disponíveis</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page">
+      <div class="agenda-layout">
+        <!-- Calendar -->
+        <div>
+          <div class="section-card anim-up">
+            <div class="cal-header">
+              <button class="cal-nav" onclick="changeMonth(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <div class="cal-month" id="calMonth"></div>
+              <button class="cal-nav" onclick="changeMonth(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px"><path d="M9 18l6-6-6-6"/></svg></button>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+            <div class="cal-legend">
+              <div class="cal-legend__item"><div class="cal-legend__dot cal-legend__dot--slot"></div>Horários disponíveis</div>
+              <div class="cal-legend__item"><div class="cal-legend__dot cal-legend__dot--event"></div>Meu encontro</div>
+            </div>
+          </div>
+
+          <!-- My upcoming events -->
+          <div class="section-card anim-up" style="animation-delay:0.1s">
+            <h2 class="section-card__title">Meus Próximos Encontros</h2>
+            <p class="section-card__sub" style="margin-bottom:12px">Encontros agendados que você pode desmarcar.</p>
+            <div id="myEvents"></div>
+          </div>
+        </div>
+
+        <!-- Day panel -->
+        <div class="day-panel anim-up" id="dayPanel" style="animation-delay:0.15s">
+          <div class="day-panel__header">
+            <div class="day-panel__date" id="panelDate">Selecione um dia</div>
+          </div>
+          <div id="daySlots">
+            <div class="empty-slots">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              <p>Clique em um dia destacado no calendário para ver os horários disponíveis</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar agendamento -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>Confirmar agendamento</h3>
+      <button class="modal-close" onclick="closeModal('confirmModal')">✕</button>
+    </div>
+    <div class="modal-body" id="confirmModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost btn--sm" onclick="closeModal('confirmModal')">Cancelar</button>
+      <button class="btn btn--primary btn--sm" onclick="confirmarAgendamento()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:10px;"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+  requireAuth(['cliente']); setupSidebar();
+
+  const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const WEEKDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth();
+  let selectedDate = null;
+  let selectedSlot = null;
+  let slots = {};
+  let meusEncontros = [];
+
+  // Toast
+  function toast(msg, type='success') {
+    const c = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    const bg = type==='success' ? '#10B981' : type==='error' ? '#EF4444' : '#3B82F6';
+    el.style.cssText = `background:${bg};color:white;padding:12px 18px;border-radius:10px;font-size:0.85rem;box-shadow:0 8px 24px rgba(0,0,0,0.15);animation:slideIn 0.2s ease;font-family:var(--font-body)`;
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all 0.3s'; setTimeout(()=>el.remove(),300); }, 3000);
+  }
+
+  // Modal
+  function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+  function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+  document.addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open'); });
+
+  // Slots
+  function loadSlots() {
+    try { slots = JSON.parse(localStorage.getItem('resolutio_slots') || '{}'); } catch { slots = {}; }
+  }
+  function saveSlots() {
+    localStorage.setItem('resolutio_slots', JSON.stringify(slots));
+  }
+  function getSlotsForDate(dateKey) {
+    return slots[dateKey] || [];
+  }
+
+  // Get client name
+  function getClientName() {
+    const user = getSession().user;
+    return user?.nome || user?.email?.split('@')[0] || 'cliente';
+  }
+
+  // Calendar
+  function renderCalendar() {
+    const grid = document.getElementById('calGrid');
+    const monthLabel = document.getElementById('calMonth');
+    monthLabel.textContent = `${MONTHS[currentMonth]} ${currentYear}`;
+
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const clientName = getClientName();
+
+    let html = WEEKDAYS.map(d => `<div class="cal-weekday">${d}</div>`).join('');
+
+    for (let i = 0; i < firstDay; i++) {
+      html += '<div class="cal-day cal-day--empty"></div>';
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateKey = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = dateKey === todayKey;
+      const isSelected = dateKey === selectedDate;
+      const daySlots = getSlotsForDate(dateKey);
+      const hasSlots = daySlots.length > 0;
+      const hasMyEvent = meusEncontros.some(e => e.data && e.data.startsWith(dateKey) && e.status === 'agendado');
+      const isPast = new Date(dateKey + 'T23:59:59') < new Date();
+
+      let classes = 'cal-day';
+      if (isToday) classes += ' cal-day--today';
+      if (isSelected) classes += ' cal-day--selected';
+      if (isPast && !isToday) classes += ' cal-day--disabled';
+      if (hasSlots) classes += ' cal-day--has-slots';
+      if (hasMyEvent) classes += ' cal-day--has-my-event';
+
+      const clickAction = (isPast && !isToday) ? '' : `selectDate('${dateKey}')`;
+      html += `<div class="${classes}" onclick="${clickAction}">${d}</div>`;
+    }
+
+    grid.innerHTML = html;
+  }
+
+  function selectDate(dateKey) {
+    selectedDate = dateKey;
+    selectedSlot = null;
+    renderCalendar();
+    renderDayPanel();
+  }
+
+  function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    renderCalendar();
+  }
+
+  // Day panel
+  function renderDayPanel() {
+    const panel = document.getElementById('daySlots');
+    const dateLabel = document.getElementById('panelDate');
+
+    if (!selectedDate) return;
+
+    const [y, m, d] = selectedDate.split('-');
+    const dt = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+    dateLabel.textContent = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+    const daySlots = getSlotsForDate(selectedDate);
+    const dayEvents = meusEncontros.filter(e => e.data && e.data.startsWith(selectedDate) && e.status === 'agendado');
+
+    let html = '';
+
+    // Available slots
+    if (daySlots.length) {
+      html += '<div style="margin-bottom:16px"><div style="font-size:0.65rem;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Horários disponíveis</div>';
+      daySlots.forEach(slot => {
+        const isSelected = selectedSlot === slot.time;
+        const bookedByMe = dayEvents.some(e => e.data.split(' ')[1] === slot.time);
+        html += `<div class="time-slot time-slot--available${isSelected ? ' time-slot--selected' : ''}" onclick="${bookedByMe ? '' : `selectSlot('${slot.time}')`}">
+          <div class="time-slot__time">${slot.time}</div>
+          <div class="time-slot__info">${bookedByMe ? 'Você já agendou este horário' : (slot.duration || 60) + ' min'}</div>
+          <div class="time-slot__check">${isSelected ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M20 6L9 17l-5-5"/></svg>' : ''}</div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    // Booking form (appears when slot is selected)
+    if (selectedSlot) {
+      html += `<div class="booking-form">
+        <div style="font-size:0.65rem;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:var(--primary);margin-bottom:12px">Horário selecionado: <strong>${selectedSlot}</strong></div>
+        <div class="form-group">
+          <label>Tipo de encontro</label>
+          <select class="form-control" id="tipoEncontro">
+            <option value="Mentoria">Mentoria (1h)</option>
+            <option value="Acompanhamento">Acompanhamento (30min)</option>
+            <option value="Urgência">Urgência (45min)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Observações</label>
+          <textarea class="form-control" id="obsEncontro" placeholder="Descreva o assunto que gostaria de abordar..."></textarea>
+          <div class="hint">Isso ajuda sua mentora a se preparar.</div>
+        </div>
+        <button class="btn btn--primary" style="width:100%" onclick="abrirConfirmacao()">Agendar encontro</button>
+      </div>`;
+    }
+
+    // My events on this day
+    if (dayEvents.length) {
+      html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft)"><div style="font-size:0.65rem;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Seus encontros neste dia</div>';
+      dayEvents.forEach(e => {
+        const time = e.data.split(' ')[1] || '??:??';
+        html += `<div class="my-event">
+          <div class="my-event__time">${time}</div>
+          <div class="my-event__info">
+            <div class="my-event__title">${e.titulo}</div>
+            <div class="my-event__date">${e.funcionario || 'Mentora'}</div>
+          </div>
+          <button class="my-event__cancel" onclick="cancelarMeuEncontro('${e.id}')">Desmarcar</button>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    if (!daySlots.length && !dayEvents.length) {
+      html = `<div class="empty-slots">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <p>Nenhum horário disponível neste dia</p>
+        <p style="font-size:0.75rem;margin-top:4px">Escolha outro dia no calendário</p>
+      </div>`;
+    }
+
+    panel.innerHTML = html;
+  }
+
+  function selectSlot(time) {
+    selectedSlot = time;
+    renderDayPanel();
+  }
+
+  // Confirm booking
+  function abrirConfirmacao() {
+    if (!selectedDate || !selectedSlot) return toast('Selecione um horário', 'error');
+    const tipo = document.getElementById('tipoEncontro')?.value || 'Mentoria';
+    const [y, m, d] = selectedDate.split('-');
+    const dt = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+    const dateStr = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+
+    document.getElementById('confirmModalBody').innerHTML = `
+      <div style="background:var(--line-soft);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:0.78rem;color:var(--muted)">Data</span><strong style="font-size:0.88rem">${dateStr}</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:0.78rem;color:var(--muted)">Horário</span><strong style="font-size:0.88rem">${selectedSlot}</strong></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-size:0.78rem;color:var(--muted)">Tipo</span><strong style="font-size:0.88rem">${tipo}</strong></div>
+      </div>
+      <p style="font-size:0.82rem;color:var(--muted)">Após confirmar, este horário não ficará mais disponível para outros.</p>
+    `;
+    openModal('confirmModal');
+  }
+
+  function confirmarAgendamento() {
+    if (!selectedDate || !selectedSlot) return;
+    const tipo = document.getElementById('tipoEncontro')?.value || 'Mentoria';
+    const obs = document.getElementById('obsEncontro')?.value?.trim() || '';
+    const clientName = getClientName();
+    const dt = selectedDate + ' ' + selectedSlot;
+
+    // Create event
+    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
+    if (!db.encontros) db.encontros = [];
+    db.encontros.push({
+      id: 'e' + Date.now(),
+      titulo: tipo,
+      cliente: clientName,
+      funcionario: 'Bruna Sirqueira',
+      data: dt,
+      status: 'agendado',
+      observacoes: obs
+    });
+    localStorage.setItem('resolutio_db', JSON.stringify(db));
+
+    // Remove slot
+    const daySlots = getSlotsForDate(selectedDate);
+    const slotIdx = daySlots.findIndex(s => s.time === selectedSlot);
+    if (slotIdx >= 0) {
+      daySlots.splice(slotIdx, 1);
+      slots[selectedDate] = daySlots;
+      saveSlots();
+    }
+
+    closeModal('confirmModal');
+    toast('Encontro agendado com sucesso!');
+    selectedSlot = null;
+    loadData();
+  }
+
+  // Cancel event
+  function cancelarMeuEncontro(eventId) {
+    if (!confirm('Tem certeza que deseja desmarcar este encontro?')) return;
+    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
+    if (db.encontros) {
+      const ev = db.encontros.find(e => e.id === eventId);
+      if (ev) {
+        ev.status = 'cancelado';
+        localStorage.setItem('resolutio_db', JSON.stringify(db));
+        toast('Encontro desmarcado');
+        loadData();
+      }
+    }
+  }
+
+  // Render my events list
+  function renderMyEvents() {
+    const container = document.getElementById('myEvents');
+    const upcoming = meusEncontros
+      .filter(e => e.status === 'agendado' && new Date(e.data.replace(' ', 'T')) >= new Date())
+      .sort((a, b) => a.data.localeCompare(b.data));
+
+    if (!upcoming.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.84rem">Nenhum encontro agendado</div>';
+      return;
+    }
+
+    container.innerHTML = upcoming.map(e => {
+      const [datePart, timePart] = e.data.split(' ');
+      const [y, m, d] = datePart.split('-');
+      const dt = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+      const dateStr = dt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+      return `<div class="my-event">
+        <div class="my-event__time">${timePart || '??:??'}</div>
+        <div class="my-event__info">
+          <div class="my-event__title">${e.titulo}</div>
+          <div class="my-event__date">${dateStr} · ${e.funcionario || 'Mentora'}</div>
+        </div>
+        <button class="my-event__cancel" onclick="cancelarMeuEncontro('${e.id}')">Desmarcar</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Load data
+  async function loadData() {
+    loadSlots();
+    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
+    meusEncontros = (db.encontros || []).filter(e => e.cliente === getClientName());
+    renderCalendar();
+    renderMyEvents();
+    if (selectedDate) renderDayPanel();
+  }
+
+  loadData();
+
+  document.querySelectorAll('.anim-up').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight) el.classList.add('is-visible');
+  });
+</script>
+</body>
+</html>

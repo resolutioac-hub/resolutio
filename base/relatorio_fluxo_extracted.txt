@@ -1,0 +1,90 @@
+RESOLUTIO — Assessoria & Consultoria Acadêmica
+Documento de referência para desenvolvimento de plataforma
+Relatório Descritivo do Fluxo de Mentoria
+Especificação funcional para construção da plataforma de gestão de mentoria, cobrindo captação, agendamento, contratos, financeiro, acompanhamento de clientes e automações
+1. Objetivo do documento
+Este documento descreve o fluxo de trabalho atual da mentoria — hoje operado manualmente por meio de vários aplicativos independentes — e define os requisitos funcionais para a plataforma que substituirá e unificará esse processo. O objetivo é dar à pessoa responsável pelo desenvolvimento uma visão completa de como a operação funciona hoje, o que precisa ser reproduzido, o que precisa ser integrado (financeiro e painel de clientes) e onde há oportunidades de melhoria.
+2. Fluxo atual (mapeamento "as-is")
+O fluxo abaixo é o processo em uso atualmente, do primeiro contato do lead até o acompanhamento contínuo do cliente:
+Captação do lead: o contato chega pelo Instagram, via link na bio (Beacons) ou diretamente por WhatsApp/Direct.
+Qualificação inicial: contato é feito pelo WhatsApp para marcar uma call de apresentação/negociação ("call contrato").
+Agendamento: envio do link de agenda (Calendly) e marcação da reunião no Google Meet.
+Fechamento: se o serviço é fechado, é gerado o link de pagamento.
+Contrato: em seguida, o contrato é enviado para assinatura digital (SuperSign), o cliente assina e o documento retorna por e-mail para a consultoria.
+Primeiro encontro: é marcado o primeiro encontro de mentoria com o cliente.
+Organização de materiais: é montada uma pasta no Drive para armazenar editais, projetos e demais materiais do cliente.
+Cronograma de acompanhamento: é definido o cronograma de encontros/acompanhamento do cliente.
+Registro de encontros: a cada encontro, a transcrição gerada (Tactiq) é incluída no "overview" (resumo geral) do cliente.
+Organização de tarefas: o Zapier é usado para organizar prioridades e enviar lembretes das atividades definidas para cada cliente.
+3. Ferramentas utilizadas hoje
+A operação depende atualmente das seguintes ferramentas, cada uma isolada das demais:
+Ferramenta
+Função no processo
+Instagram + Beacons
+Captação do lead e primeiro contato
+WhatsApp
+Qualificação e agendamento da call
+Calendly
+Agendamento da reunião
+Google Meet
+Realização da call/reunião
+Link de pagamento
+Cobrança após o fechamento do serviço
+SuperSign
+Assinatura digital do contrato
+E-mail
+Recebimento do contrato assinado
+Google Drive
+Armazenamento de materiais, editais e projetos do cliente
+Tactiq
+Transcrição automática dos encontros
+Zapier
+Automação de prioridades e lembretes de atividades
+O principal ponto de atrito é que cada etapa vive em uma ferramenta diferente, sem um painel único que mostre em que estágio cada cliente está.
+4. Requisitos para a nova plataforma
+Além de reproduzir o fluxo acima em um único sistema, a plataforma precisa cobrir dois pontos que hoje não existem:
+Sistema financeiro integrado — controle de cobranças, pagamentos e status financeiro por cliente.
+Painel de status dos clientes — visão geral de onde cada cliente está no funil/jornada, para não perder o acompanhamento.
+4.1 Captação e CRM de leads
+Cadastro do lead com origem (Instagram/Direto/WhatsApp/Beacons) e data do primeiro contato.
+Registro do status de qualificação (novo lead → em conversa → call marcada → proposta enviada → fechado/perdido).
+4.2 Agendamento
+Integração com agenda (equivalente ao Calendly) para marcação de calls de venda e de encontros de mentoria.
+Sincronização com Google Calendar/Meet para evitar duplo agendamento.
+4.3 Contratos e assinatura
+Geração e envio do contrato para assinatura digital, com armazenamento automático do documento assinado no cadastro do cliente (sem depender do retorno manual por e-mail).
+Histórico de versões e status do contrato (enviado, visualizado, assinado).
+4.4 Financeiro
+Geração de link de pagamento vinculado ao cliente e ao serviço fechado.
+Controle de status de pagamento (pendente, pago, parcelado, atrasado).
+Visão consolidada de faturamento (recebido, a receber, inadimplência) — hoje inexistente.
+Histórico financeiro por cliente, acessível junto com os demais dados do cadastro.
+4.5 Painel de acompanhamento de clientes (status)
+Visão única (dashboard) com todos os clientes ativos e a etapa em que cada um está: lead, contrato, onboarding, em mentoria, concluído.
+Indicação visual de pendências: contrato não assinado, pagamento em aberto, encontro sem transcrição registrada, cronograma atrasado.
+Página individual do cliente reunindo: dados de contato, status financeiro, contrato, cronograma de encontros, materiais (editais/projetos) e histórico de transcrições/overview.
+4.6 Repositório de materiais
+Área de arquivos por cliente (substituindo a pasta manual no Drive), organizada por tipo: editais, projetos, materiais de estudo.
+Possibilidade de continuar integrando com o Google Drive, se for mais simples do que reconstruir o armazenamento do zero.
+4.7 Cronograma e automações
+Cronograma de acompanhamento por cliente, com datas de encontros e atividades definidas.
+Envio automático de lembretes de atividades (substituindo o uso atual do Zapier).
+Campo de "overview" por cliente, onde a transcrição de cada encontro (via integração com Tactiq ou ferramenta equivalente) é registrada automaticamente.
+5. Sugestões de melhoria
+Além de unificar o que já existe, alguns pontos do fluxo atual podem ser otimizados na nova plataforma:
+Formulário de qualificação automático: em vez de qualificar só por WhatsApp, um formulário curto antes da call (objetivo, edital de interesse, prazo) economiza tempo na primeira conversa e já entra como dado estruturado no CRM.
+Assinatura e pagamento em um único passo: apresentar contrato e link de pagamento na mesma etapa evita o vaivém atual entre gerar o link, mandar o contrato e esperar o retorno por e-mail.
+Alertas automáticos de pendência: notificação para você quando um contrato fica parado sem assinatura por X dias, ou um pagamento vence sem confirmação.
+Cronograma como linha do tempo visual: transformar o cronograma de acompanhamento em uma timeline visual por cliente, com status de cada encontro (feito, remarcado, pendente).
+Overview do cliente pesquisável: permitir buscar por palavra-chave dentro das transcrições/overview acumulados, útil para retomar o histórico de um cliente rapidamente.
+Relatório mensal automático: visão consolidada de novos leads, taxa de conversão em contrato fechado e faturamento do mês, sem precisar montar isso manualmente.
+6. Fluxo proposto para a plataforma (visão resumida)
+Em termos práticos, a plataforma deve conduzir o cliente pelas mesmas etapas de hoje, mas dentro de um único sistema, com o financeiro e o status sempre visíveis:
+Lead entra (Instagram/WhatsApp) → cadastro automático ou manual no CRM.
+Qualificação e agendamento da call dentro da própria plataforma.
+Proposta, contrato e link de pagamento gerados juntos, com status rastreável.
+Ao fechar, cliente é promovido a "ativo" e aparece no painel de acompanhamento.
+Pasta de materiais, cronograma de encontros e overview são criados automaticamente para o novo cliente.
+A cada encontro, transcrição e lembretes de atividades são registrados/enviados automaticamente.
+Painel geral mostra, a qualquer momento, todos os clientes, sua etapa, pendências e situação financeira.
+Documento preparado a partir do mapeamento manual do fluxo atual, para orientar o desenvolvimento da plataforma.

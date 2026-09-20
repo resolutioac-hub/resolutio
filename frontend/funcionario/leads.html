@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads (Comercial) — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  body { font-family: var(--font-body); background: linear-gradient(170deg, #fcfaf6 0%, #f4efe8 100%); color: #1a1715; overflow-x: hidden; }
+  .sidebar { width: 260px; background: linear-gradient(180deg, #fff 0%, #fdfaf7 100%); border-right: 1px solid var(--line); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; box-shadow: 6px 0 20px rgba(30,21,19,0.04); }
+  .sidebar__brand { padding: 28px 22px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .nav__label { font-family: var(--font-body); font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 18px 14px 8px; }
+  .nav__item { color: var(--text); font-size: 0.82rem; padding: 10px 14px; border-radius: 10px; transition: background 150ms ease; display: flex; align-items: center; gap: 10px; }
+  .nav__item:hover { background: var(--primary-50); color: var(--primary-700); }
+  .nav__item--active { background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(114,80,71,0.25); }
+  .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+  .nav__icon svg { width: 16px; height: 16px; }
+  .sidebar__footer { padding: 16px; border-top: 1px solid var(--line-soft); }
+  .user { background: rgba(255,255,255,0.8); border-radius: 14px; padding: 12px; border: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .user__avatar { background: linear-gradient(135deg, var(--primary), var(--primary-700)); box-shadow: 0 4px 12px rgba(114,80,71,0.25); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.72rem; color: #fff; }
+  .user__name { color: var(--ink); font-weight: 600; font-size: 0.80rem; }
+  .user__email { color: var(--muted); font-size: 0.66rem; }
+  .main { flex: 1; margin-left: 260px; min-height: 100vh; }
+  .topbar { height: 72px; background: rgba(255,255,255,0.75); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(30,21,19,0.06); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 50; }
+  .topbar__title { font-family: var(--font-body); font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+  .topbar__subtitle { font-size: 0.80rem; color: var(--muted); }
+  .page { padding: 28px 32px; max-width: 1300px; width: 100%; margin: 0 auto; }
+  .pipeline { display: grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: 14px; margin-top: 20px; overflow-x: auto; padding-bottom: 12px; }
+  .pipeline-stage { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 16px; min-height: 350px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); }
+  .pipeline-stage__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line-soft); }
+  .pipeline-stage__title { font-size: 0.82rem; font-weight: 700; color: var(--ink); }
+  .pipeline-stage__count { font-size: 0.70rem; color: var(--muted); background: var(--line-soft); padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+  .lead-card { background: #fff; border: 1.5px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(30,21,19,0.03); transition: transform 0.15s, border-color 0.15s; }
+  .lead-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+  .lead-card__name { font-weight: 700; font-size: 0.92rem; color: var(--ink); }
+  .lead-card__meta { font-size: 0.76rem; color: var(--muted); margin-top: 4px; }
+  .lead-card__actions { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 0.68rem; font-weight: 700; }
+  .badge--primary { background: var(--primary-50); color: var(--primary); }
+  .badge--success { background: #ecfdf5; color: #10b981; }
+  @media (max-width: 900px) { .main { margin-left: 0; } .sidebar { display: none; } .sidebar.is-open { display: flex; } .page { padding: 16px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <img src="../assets/images/logo-branca.png" alt="Resolutio" style="width:100%;max-width:180px;height:auto;object-fit:contain">
+    </div>
+    <nav class="sidebar__nav" id="dynamicNav"></nav>
+    <div class="sidebar__footer">
+      <div class="user"><div class="user__avatar" id="userAvatar">FU</div><div><div class="user__name" id="userName">Comercial</div><div class="user__email" id="userEmail">comercial@resolutio.com</div></div></div>
+      <button class="btn btn--danger btn--sm" style="width:100%;margin-top:10px" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('is-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div>
+          <div class="topbar__title">Gestão de Leads (Pipeline Comercial)</div>
+          <div class="topbar__subtitle">Cadastre oportunidades, monitore agendamentos e faça follow-up</div>
+        </div>
+      </div>
+      <button class="btn btn--primary btn--sm" onclick="openModal('newLeadModal')">+ Cadastrar Lead</button>
+    </header>
+
+    <div class="page">
+      <div style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px 20px;display:flex;gap:16px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+        <span style="font-weight:700;font-size:0.85rem;color:var(--ink)">Funções do Comercial:</span>
+        <span class="badge badge--primary">✓ Cadastrar Leads no Funil</span>
+        <span class="badge badge--primary">✓ Enviar Google Calendar / Meet</span>
+        <span class="badge badge--primary">✓ Confirmar Reuniões & Follow-up</span>
+        <span class="badge badge--success">✓ Converter em Cliente</span>
+      </div>
+
+      <div class="pipeline" id="pipelineContainer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Novo Lead -->
+<div class="modal-overlay" id="newLeadModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Novo Lead</h3><button class="modal-close" onclick="closeModal('newLeadModal')" aria-label="Fechar">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label for="leadNome">Nome do Lead</label><input id="leadNome" class="form-control" placeholder="Nome completo"></div>
+      <div class="form-group"><label for="leadEmail">E-mail</label><input id="leadEmail" class="form-control" type="email"></div>
+      <div class="form-group"><label for="leadWhats">WhatsApp / Telefone</label><input id="leadWhats" class="form-control" placeholder="(99) 99999-9999" oninput="this.value=formatPhoneBR(this.value)"></div>
+      <div class="form-group"><label for="leadPacote">Pacote de Interesse</label><select id="leadPacote" class="form-control"><option value="essencial">Essencial</option><option value="estrategico">Estratégico</option><option value="excelencia">Excelência</option></select></div>
+      <div class="form-group"><label for="leadOrigem">Origem do Lead</label><select id="leadOrigem" class="form-control"><option value="Pipefy">Pipefy / Formulário</option><option value="Instagram">Instagram Direct</option><option value="Indicação">Indicação</option><option value="Google">Google / Site</option></select></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('newLeadModal')">Cancelar</button><button class="btn btn--primary" onclick="saveNewLead()">Cadastrar Lead</button></div>
+  </div>
+</div>
+
+<!-- Modal Follow-up & Reunião -->
+<div class="modal-overlay" id="leadDetailModal">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header"><h3 id="modalLeadTitle">Detalhes do Lead</h3><button class="modal-close" onclick="closeModal('leadDetailModal')" aria-label="Fechar">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="detailLeadId">
+      <div style="background:var(--primary-50);padding:14px;border-radius:12px;margin-bottom:16px">
+        <div id="detailLeadMeta" style="font-size:0.85rem;color:var(--ink);font-weight:600"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Agendar Reunião de Apresentação (Google Calendar / Meet)</label>
+        <div style="display:flex;gap:8px">
+          <input type="datetime-local" id="meetDateTime" class="form-control" style="flex:1">
+          <button class="btn btn--secondary btn--sm" onclick="scheduleLeadMeeting()">Agendar & Salvar</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Histórico de Follow-up / Lembretes</label>
+        <textarea id="leadFollowupNotes" class="form-control" rows="3" placeholder="Registre o retorno do contato, objeções ou próximos passos..."></textarea>
+        <button class="btn btn--ghost btn--sm" style="margin-top:6px" onclick="saveFollowupNotes()">Salvar Histórico</button>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('leadDetailModal')">Fechar</button></div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="./funcionario-nav.js"></script>
+<script>
+  requireAuth(['funcionario']); setupSidebar(); renderFuncionarioNav('leads');
+
+  const STAGES = [
+    { id: 'novo', title: 'Novo Lead' },
+    { id: 'agendado', title: 'Reunião Agendada' },
+    { id: 'followup', title: 'Em Follow-up' },
+    { id: 'proposta', title: 'Proposta Enviada' },
+    { id: 'fechado', title: 'Fechado (Cliente)' }
+  ];
+
+  let allLeads = [];
+
+  async function load() {
+    allLeads = await API.leads.list();
+    renderPipeline();
+  }
+
+  function renderPipeline() {
+    const container = document.getElementById('pipelineContainer');
+    container.innerHTML = STAGES.map(stage => {
+      const stageLeads = allLeads.filter(l => (l.estagio || 'novo') === stage.id);
+      return `
+      <div class="pipeline-stage">
+        <div class="pipeline-stage__header">
+          <span class="pipeline-stage__title">${stage.title}</span>
+          <span class="pipeline-stage__count">${stageLeads.length}</span>
+        </div>
+        ${stageLeads.map(l => {
+          const cleanPhone = (l.whatsapp || l.telefone || '').replace(/\D/g, '');
+          const whatsUrl = cleanPhone ? `https://wa.me/55${cleanPhone}?text=${encodeURIComponent('Olá '+l.nome+', tudo bem? Sou da Resolutio Mentoria! Gostaria de confirmar nossa reunião.')}` : '#';
+          return `
+          <div class="lead-card">
+            <div class="lead-card__name">${l.nome}</div>
+            <div class="lead-card__meta">${l.email || 'Sem e-mail'}</div>
+            <div class="lead-card__meta">Pacote: <strong>${l.pacote || 'Não definido'}</strong> · ${l.origem || 'Direto'}</div>
+            
+            <div class="lead-card__actions">
+              ${cleanPhone ? `<a href="${whatsUrl}" target="_blank" class="btn btn--ghost btn--sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:12px;height:12px;margin-right:4px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> WhatsApp Lembrete</a>` : ''}
+              
+              <div style="display:flex;gap:4px;margin-top:4px">
+                <button class="btn btn--secondary btn--sm" style="flex:1;font-size:0.70rem" onclick="openLeadModal('${l.id}')">Agendar/Obs</button>
+                ${stage.id !== 'fechado' ? `<button class="btn btn--primary btn--sm" style="font-size:0.70rem" onclick="advanceLeadStage('${l.id}')">Avançar →</button>` : `<button class="btn btn--success btn--sm" style="font-size:0.70rem" onclick="convertToClient('${l.id}')">Virar Cliente</button>`}
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  }
+
+  async function saveNewLead() {
+    const nome = document.getElementById('leadNome').value.trim();
+    const email = document.getElementById('leadEmail').value.trim();
+    const whatsapp = document.getElementById('leadWhats').value.trim();
+    const pacote = document.getElementById('leadPacote').value;
+    const origem = document.getElementById('leadOrigem').value;
+
+    if (!nome) return toast('Informe o nome do lead.', 'error');
+
+    try {
+      await API.leads.create({ nome, email, whatsapp, pacote, origem, estagio: 'novo' });
+      closeModal('newLeadModal');
+      document.getElementById('leadNome').value = '';
+      document.getElementById('leadEmail').value = '';
+      document.getElementById('leadWhats').value = '';
+      toast('Lead cadastrado no pipeline!', 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function advanceLeadStage(leadId) {
+    const lead = allLeads.find(l => l.id === leadId);
+    if (!lead) return;
+    const currentIdx = STAGES.findIndex(s => s.id === (lead.estagio || 'novo'));
+    const nextStage = STAGES[Math.min(STAGES.length - 1, currentIdx + 1)].id;
+    try {
+      await API.leads.update(leadId, { estagio: nextStage });
+      toast(`Lead avançado para "${STAGES.find(s=>s.id===nextStage).title}"!`, 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function openLeadModal(leadId) {
+    const lead = allLeads.find(l => l.id === leadId);
+    if (!lead) return;
+    document.getElementById('detailLeadId').value = lead.id;
+    document.getElementById('modalLeadTitle').textContent = `Lead: ${lead.nome}`;
+    document.getElementById('detailLeadMeta').textContent = `${lead.nome} | ${lead.email || ''} | WhatsApp: ${lead.whatsapp || 'Não informado'}`;
+    document.getElementById('leadFollowupNotes').value = lead.observacoes || lead.historico || '';
+    openModal('leadDetailModal');
+  }
+
+  async function scheduleLeadMeeting() {
+    const id = document.getElementById('detailLeadId').value;
+    const dt = document.getElementById('meetDateTime').value;
+    if (!dt) return toast('Selecione data e hora para a reunião.', 'error');
+    const lead = allLeads.find(l => l.id === id);
+    try {
+      const formattedDate = dt.replace('T', ' ') + ':00';
+      await API.encontros.create({
+        titulo: `Reunião Comercial — ${lead?.nome || 'Lead'}`,
+        cliente: lead?.nome || 'Lead',
+        data: formattedDate,
+        status: 'agendado',
+        link_meet: 'https://meet.google.com/new'
+      });
+      await API.leads.update(id, { estagio: 'agendado' });
+      toast('Reunião agendada e convite Meet gerado!', 'success');
+      closeModal('leadDetailModal');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function saveFollowupNotes() {
+    const id = document.getElementById('detailLeadId').value;
+    const notes = document.getElementById('leadFollowupNotes').value.trim();
+    try {
+      await API.leads.update(id, { observacoes: notes, estagio: 'followup' });
+      toast('Follow-up registrado com sucesso!', 'success');
+      closeModal('leadDetailModal');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function convertToClient(leadId) {
+    const lead = allLeads.find(l => l.id === leadId);
+    if (!lead) return;
+    
+    const entradaPrompt = prompt(`Converter "${lead.nome}" em Cliente.\nSe o cliente pagou valor de ENTRADA/SINAL hoje, digite o valor (ex: 500):`, "");
+    const entradaVal = parseFloat(entradaPrompt) || 0;
+
+    try {
+      await API.clientes.create({
+        nome: lead.nome,
+        email: lead.email || `${lead.nome.toLowerCase().replace(/\s+/g,'')}@cliente.com`,
+        whatsapp: lead.whatsapp,
+        pacote: lead.pacote || 'essencial',
+        status: 'ativo',
+        pilar: 1,
+        valor_entrada: entradaVal
+      });
+
+      if (entradaVal > 0) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        await API.financeiro.create({
+          cliente: lead.nome,
+          email: lead.email || '',
+          whatsapp: lead.whatsapp || '',
+          descricao: `Entrada da Mentoria (${lead.pacote || 'Mentoria'})`,
+          valor: entradaVal,
+          vencimento: todayStr,
+          data: todayStr,
+          status: 'pago'
+        });
+      }
+
+      await API.leads.update(leadId, { estagio: 'fechado' });
+
+      toast(`Lead ${lead.nome} convertido em Cliente com sucesso!${entradaVal > 0 ? ' Entrada de R$ '+entradaVal+' lançada no financeiro.' : ''}`, 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  load();
+</script>
+</body>
+</html>

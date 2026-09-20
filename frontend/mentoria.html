@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mentoria Aprovação Passo a Passo — Resolutio</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="./css/variables.css?v=6">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-sans); color: var(--text); background: var(--cream); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+/* ====== NAV ====== */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 40px;
+  background: rgba(253,250,247,0.85); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(236,224,217,0.6);
+  transition: box-shadow 0.3s, padding 0.3s;
+}
+.nav.scrolled { box-shadow: 0 2px 20px rgba(46,33,31,0.08); padding: 10px 40px; }
+.nav__brand { display: flex; align-items: center; gap: 10px; }
+.nav__logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+.nav__name { font-size: 0.92rem; font-weight: 800; letter-spacing: 0.12em; color: var(--primary-700); }
+.nav__links { display: flex; gap: 6px; }
+.nav__links a {
+  padding: 7px 14px; border-radius: var(--r-full); font-size: 0.78rem; font-weight: 600;
+  color: var(--muted); text-decoration: none; transition: all 0.2s;
+}
+.nav__links a:hover, .nav__links a.active { background: var(--primary); color: #fff; }
+.nav__cta {
+  padding: 8px 20px; border-radius: var(--r-full); font-size: 0.80rem; font-weight: 700;
+  background: var(--primary); color: #fff; border: none; cursor: pointer;
+  transition: all 0.25s; text-decoration: none;
+}
+.nav__cta:hover { background: var(--primary-600); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(114,80,71,0.25); }
+.nav__mobile { display: none; background: none; border: 1px solid var(--line); border-radius: var(--r-10); padding: 8px; color: var(--muted); cursor: pointer; }
+
+/* ====== HERO ====== */
+.hero {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 90px 48px 60px; position: relative; overflow: hidden;
+  background: linear-gradient(160deg, #4a332f 0%, #725047 55%, #8a6b65 100%);
+  color: #fff;
+}
+.hero::before {
+  content: ''; position: absolute; top: -10%; right: -12%;
+  width: 700px; height: 640px;
+  background: radial-gradient(ellipse at 30% 30%, rgba(190,176,163,0.22) 0%, rgba(253,246,236,0.08) 38%, transparent 72%);
+  pointer-events: none; border-radius: 42% 58% 62% 38% / 38% 42% 58% 62%;
+  animation: blobFloat 16s ease-in-out infinite;
+}
+.hero::after {
+  content: ''; position: absolute; bottom: -14%; left: -8%;
+  width: 500px; height: 440px; border: 1px solid rgba(253,246,236,0.10);
+  border-radius: 58% 42% 38% 62% / 62% 38% 42% 58%; pointer-events: none;
+  animation: blobFloat 18s ease-in-out infinite reverse;
+}
+@keyframes blobFloat { 0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(6px,-8px) scale(1.02)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUpSmall { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
+@keyframes scaleIn { from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)} }
+@keyframes slideRight { from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)} }
+
+.hero__grid {
+  position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr;
+  gap: 60px; align-items: center; max-width: 1120px; width: 100%;
+}
+.hero__left { text-align: left; }
+.hero__badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: var(--r-full);
+  background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.16);
+  font-size: 0.70rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.88); margin-bottom: 28px;
+  animation: fadeUp 0.7s ease both 0.2s;
+}
+.hero__badge i { font-size: 0.8rem; color: #beb0a3; }
+.hero__title {
+  font-family: var(--font-display); font-size: clamp(2.8rem, 5vw, 4rem);
+  font-weight: 400; line-height: 1.08; letter-spacing: -0.03em;
+  animation: fadeUp 0.8s ease both 0.35s;
+}
+.hero__title em { font-style: italic; color: #e8d5c5; display: block; font-size: 0.88em; }
+.hero__sub {
+  font-size: 1.05rem; line-height: 1.7; color: rgba(255,255,255,0.82);
+  margin-top: 22px; max-width: 480px;
+  animation: fadeUp 0.8s ease both 0.5s;
+}
+.hero__sub strong { color: #fff; font-weight: 700; }
+.hero__pillars {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin-top: 28px;
+  animation: fadeUp 0.8s ease both 0.5s;
+}
+.hero__pillar {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: 12px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(6px); transition: background 0.25s;
+}
+.hero__pillar:hover { background: rgba(255,255,255,0.14); }
+.hero__pillar i {
+  color: #beb0a3; font-size: 0.85rem; margin-top: 2px; flex-shrink: 0; width: 18px; text-align: center;
+}
+.hero__pillar strong { font-size: 0.82rem; font-weight: 700; color: #fff; display: block; line-height: 1.2; }
+.hero__pillar span { font-size: 0.72rem; color: rgba(255,255,255,0.6); line-height: 1.4; display: block; margin-top: 2px; }
+.hero__actions {
+  display: flex; gap: 14px; margin-top: 36px;
+  animation: fadeUp 0.8s ease both 0.65s;
+}
+.btn-hero {
+  padding: 14px 32px; border-radius: var(--r-full); font-size: 0.88rem; font-weight: 700;
+  border: none; cursor: pointer; transition: all 0.25s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-hero--primary { background: #fff; color: var(--primary-700); }
+.btn-hero--primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.18); }
+.btn-hero--ghost { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(6px); }
+.btn-hero--ghost:hover { background: rgba(255,255,255,0.18); }
+.hero__footer {
+  display: flex; align-items: center; gap: 14px; margin-top: 40px;
+  padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.12);
+  animation: fadeUp 0.8s ease both 0.75s;
+}
+.hero__footer img {
+  width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.hero__footer-name { font-size: 0.92rem; font-weight: 700; color: #fff; }
+.hero__footer-name em { font-weight: 400; font-size: 0.62rem; color: rgba(255,255,255,0.6); vertical-align: super; }
+.hero__footer-role { font-size: 0.70rem; color: rgba(255,255,255,0.6); letter-spacing: 0.06em; margin-top: 2px; }
+
+.hero__right {
+  display: flex; justify-content: center; align-items: center;
+  position: relative;
+  animation: fadeUp 0.9s ease both 0.5s;
+}
+.hero__photo {
+  position: relative; z-index: 2;
+}
+.hero__photo img {
+  width: 380px; height: 460px; border-radius: 20px; object-fit: cover;
+  border: 3px solid rgba(255,255,255,0.18); object-position: top center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.hero__photo-glow {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 340px; height: 340px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(190,176,163,0.18) 0%, transparent 70%);
+  pointer-events: none; z-index: 1;
+  animation: blobFloat 12s ease-in-out infinite;
+}
+.hero__photo-dots {
+  position: absolute; bottom: -12px; right: -16px; z-index: 3;
+  display: grid; grid-template-columns: repeat(4, 8px); gap: 6px;
+}
+.hero__photo-dots span {
+  width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2);
+}
+.hero__stats {
+  display: flex; gap: 28px; margin-top: 20px;
+  animation: fadeUp 0.8s ease both 0.85s;
+}
+.hero__stat { text-align: center; }
+.hero__stat-value { font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+.hero__stat-label { font-size: 0.68rem; color: rgba(255,255,255,0.55); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+
+/* ====== SECTIONS (shared) ====== */
+.section { padding: 80px 40px; }
+.section--alt { background: var(--surface); }
+.section__inner { max-width: 1080px; margin: 0 auto; }
+.section__eyebrow {
+  font-size: 0.70rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--primary); display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.section__eyebrow::before { content: ''; width: 24px; height: 2px; background: var(--primary); border-radius: 1px; }
+.section__heading {
+  font-family: var(--font-display); font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: var(--ink);
+}
+.section__heading em { font-style: italic; color: var(--primary); }
+.section__desc { font-size: 0.95rem; color: var(--muted); line-height: 1.65; margin-top: 10px; max-width: 580px; }
+
+/* ====== TRAJECTORY ====== */
+.trajectory__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; align-items: start; }
+.trajectory__photo {
+  border-radius: var(--r-16); overflow: hidden; position: relative;
+  box-shadow: var(--shadow-md); border: 1px solid var(--line);
+}
+.trajectory__photo img { width: 100%; display: block; aspect-ratio: 3/4; object-fit: cover; }
+.trajectory__content { padding-top: 8px; }
+.trajectory__text { font-size: 0.92rem; line-height: 1.7; color: var(--text); }
+.trajectory__list { list-style: none; margin-top: 20px; }
+.trajectory__list li {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;
+  font-size: 0.88rem; color: var(--text); border-bottom: 1px solid var(--line-soft);
+}
+.trajectory__list li:last-child { border-bottom: none; }
+.trajectory__list li i { color: var(--primary); margin-top: 3px; flex-shrink: 0; font-size: 0.85rem; }
+
+/* ====== METHOD (4 pillars) ====== */
+.method__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 40px; }
+.method__card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-16);
+  padding: 28px 22px; text-align: center; position: relative; overflow: hidden;
+  transition: all 0.3s; cursor: default;
+}
+.method__card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--primary-200); }
+.method__card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--primary) 0%, #8a6b65 100%); opacity: 0; transition: opacity 0.3s;
+}
+.method__card:hover::before { opacity: 1; }
+.method__number {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--primary-50); border: 1px solid var(--primary-200);
+  font-size: 0.88rem; font-weight: 800; color: var(--primary);
+  margin-bottom: 16px;
+}
+.method__card h4 {
+  font-family: var(--font-display); font-size: 1.08rem; font-weight: 400;
+  color: var(--ink); letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 8px;
+}
+.method__card p { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+
+/* ====== DURATION ====== */
+.duration__box {
+  background: linear-gradient(135deg, #725047 0%, #5e423f 100%);
+  border-radius: var(--r-16); padding: 48px; color: #fff; text-align: center;
+  margin-top: 40px; position: relative; overflow: hidden;
+}
+.duration__box::before {
+  content: ''; position: absolute; top: -30%; right: -10%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
+.duration__value {
+  font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 400; margin-bottom: 12px; position: relative;
+}
+.duration__value em { font-style: italic; color: #e8d5c5; }
+.duration__text { font-size: 0.95rem; line-height: 1.65; color: rgba(255,255,255,0.82); max-width: 560px; margin: 0 auto; position: relative; }
+
+/* ====== PACKAGES ====== */
+.packages__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px; }
+.package {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-16);
+  padding: 32px 26px; position: relative; overflow: hidden; transition: all 0.3s;
+}
+.package:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.package--featured {
+  border: 2px solid var(--primary);
+  box-shadow: 0 8px 30px rgba(114,80,71,0.12);
+}
+.package--featured::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--primary) 0%, #beb0a3 100%);
+}
+.package__badge {
+  position: absolute; top: 16px; right: 16px;
+  padding: 4px 12px; border-radius: var(--r-full);
+  background: var(--primary); color: #fff;
+  font-size: 0.66rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.package__name {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--primary); margin-bottom: 4px;
+}
+.package__title {
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 400;
+  color: var(--ink); margin-bottom: 16px;
+}
+.package__meta { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.package__meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); }
+.package__meta-item i { color: var(--primary); font-size: 0.75rem; }
+.package__list { list-style: none; margin-bottom: 24px; }
+.package__list li {
+  display: flex; align-items: flex-start; gap: 8px; padding: 7px 0;
+  font-size: 0.84rem; color: var(--text); line-height: 1.45;
+}
+.package__list li i { color: var(--success); margin-top: 3px; flex-shrink: 0; font-size: 0.78rem; }
+.package__price { padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.package__price-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.package__price-value {
+  font-size: 1.6rem; font-weight: 800; color: var(--ink); letter-spacing: -0.03em;
+  display: flex; align-items: baseline; gap: 4px; margin-top: 4px;
+}
+.package__price-value small { font-size: 0.95rem; font-weight: 600; color: var(--muted); }
+.package__installments { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+.package__installments strong { color: var(--primary); }
+.package__cta {
+  display: block; width: 100%; padding: 12px; border-radius: var(--r-10); margin-top: 20px;
+  font-size: 0.84rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.25s;
+  text-align: center; text-decoration: none;
+}
+.package__cta--primary { background: var(--primary); color: #fff; }
+.package__cta--primary:hover { background: var(--primary-600); }
+.package__cta--secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.package__cta--secondary:hover { background: var(--cream); }
+.package__note {
+  font-size: 0.74rem; color: var(--muted); text-align: center; margin-top: 16px;
+  font-style: italic;
+}
+
+/* ====== TESTIMONIALS ====== */
+.testimonials__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px; }
+.testimonial {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-16);
+  padding: 26px; position: relative; transition: all 0.3s;
+}
+.testimonial:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.testimonial__quote {
+  font-size: 2rem; color: var(--primary-200); line-height: 1; margin-bottom: 8px;
+  font-family: Georgia, serif;
+}
+.testimonial__text { font-size: 0.88rem; line-height: 1.65; color: var(--text); font-style: italic; }
+.testimonial__author { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+.testimonial__avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--primary-50);
+  border: 1px solid var(--primary-200); display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.82rem; color: var(--primary); flex-shrink: 0;
+}
+.testimonial__name { font-size: 0.82rem; font-weight: 700; color: var(--ink); }
+.testimonial__detail { font-size: 0.72rem; color: var(--muted); }
+
+/* ====== FAQ ====== */
+.faq__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
+.faq__item {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-16);
+  overflow: hidden; transition: all 0.3s;
+}
+.faq__item:hover { border-color: var(--primary-200); }
+.faq__item.open { border-color: var(--primary); box-shadow: 0 4px 16px rgba(114,80,71,0.08); }
+.faq__question {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px 20px; cursor: pointer; font-size: 0.88rem; font-weight: 700; color: var(--ink);
+  background: none; border: none; width: 100%; text-align: left; font-family: inherit;
+}
+.faq__question i { color: var(--primary); transition: transform 0.3s; flex-shrink: 0; font-size: 0.82rem; }
+.faq__item.open .faq__question i { transform: rotate(180deg); }
+.faq__answer {
+  max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.35s ease;
+  padding: 0 20px;
+}
+.faq__item.open .faq__answer { max-height: 200px; padding: 0 20px 18px; }
+.faq__answer p { font-size: 0.86rem; line-height: 1.65; color: var(--muted); }
+
+/* ====== CTA ====== */
+.cta {
+  padding: 80px 40px; text-align: center;
+  background: linear-gradient(160deg, #4a332f 0%, #725047 55%, #8a6b65 100%);
+  color: #fff; position: relative; overflow: hidden;
+}
+.cta::before {
+  content: ''; position: absolute; top: -20%; left: -10%;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
+.cta__inner { max-width: 600px; margin: 0 auto; position: relative; }
+.cta__heading {
+  font-family: var(--font-display); font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 400; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 14px;
+}
+.cta__heading em { font-style: italic; color: #e8d5c5; }
+.cta__text { font-size: 0.95rem; color: rgba(255,255,255,0.8); line-height: 1.6; margin-bottom: 28px; }
+.cta__contacts { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+.cta__contact {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: var(--r-full);
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.16);
+  font-size: 0.86rem; color: rgba(255,255,255,0.9); text-decoration: none;
+  transition: all 0.25s; backdrop-filter: blur(6px);
+}
+.cta__contact:hover { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
+.cta__contact i { color: #beb0a3; }
+
+/* ====== FOOTER ====== */
+.footer {
+  padding: 24px 40px; text-align: center; border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.footer__text { font-size: 0.78rem; color: var(--muted); }
+.footer__text strong { color: var(--primary); }
+
+/* ====== SCROLL REVEAL ====== */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 960px) {
+  .nav { padding: 12px 20px; }
+  .nav.scrolled { padding: 10px 20px; }
+  .nav__links { display: none; }
+  .nav__mobile { display: flex; }
+  .section { padding: 60px 20px; }
+  .hero { padding: 90px 24px 50px; }
+  .hero__grid { grid-template-columns: 1fr; gap: 32px; text-align: center; }
+  .hero__left { order: 1; display: flex; flex-direction: column; align-items: center; }
+  .hero__sub { max-width: 520px; margin-left: auto; margin-right: auto; }
+  .hero__pillars { max-width: 400px; margin-left: auto; margin-right: auto; }
+  .hero__actions { justify-content: center; }
+  .hero__footer { justify-content: center; }
+  .hero__stats { justify-content: center; }
+  .hero__right { order: 0; }
+  .hero__photo img { width: 260px; height: 320px; }
+  .hero__photo-glow { width: 240px; height: 240px; }
+  .trajectory__grid { grid-template-columns: 1fr; gap: 24px; }
+  .trajectory__photo { max-width: 320px; margin: 0 auto; }
+  .method__grid { grid-template-columns: 1fr 1fr; }
+  .packages__grid { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; }
+  .testimonials__grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .faq__grid { grid-template-columns: 1fr; }
+  .duration__box { padding: 32px 24px; }
+  .cta__contacts { flex-direction: column; align-items: center; }
+}
+@media (max-width: 560px) {
+  .method__grid { grid-template-columns: 1fr; }
+  .hero__sub { font-size: 0.92rem; }
+  .hero__photo img { width: 200px; height: 250px; }
+  .hero__pillars { grid-template-columns: 1fr; }
+  .hero__stats { gap: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav class="nav" id="nav">
+  <div class="nav__brand">
+    <img src="./assets/images/logo-resolutio.jpeg" alt="Resolutio" class="nav__logo">
+    <span class="nav__name">RESOLUTIO</span>
+  </div>
+  <div class="nav__links">
+    <a href="#sobre">Sobre</a>
+    <a href="#metodo">Método</a>
+    <a href="#pacotes">Pacotes</a>
+    <a href="#depoimentos">Depoimentos</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <a href="#contato" class="nav__cta">Fale Comigo</a>
+  <button class="nav__mobile" id="mobileMenu" aria-label="Menu">
+    <i class="fas fa-bars"></i>
+  </button>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero__grid">
+    <div class="hero__left">
+      <div class="hero__badge">
+        <i class="fas fa-graduation-cap"></i> Mentoria Aprovação Passo a Passo
+      </div>
+      <h1 class="hero__title">
+        Seja aprovado no<br>
+        <em>mestrado ou doutorado</em>
+      </h1>
+      <p class="hero__sub">
+        Método completo para profissionais da saúde conquistarem vaga na pós-graduação — com <strong>planejamento estratégico</strong>, <strong>acompanhamento personalizado</strong> e apenas <strong>2 horas por dia</strong> de dedicação.
+      </p>
+
+      <div class="hero__pillars">
+        <div class="hero__pillar">
+          <i class="fas fa-search"></i>
+          <div>
+            <strong>Mapeamento</strong>
+            <span>Diagnóstico do perfil e dos programas ideais</span>
+          </div>
+        </div>
+        <div class="hero__pillar">
+          <i class="fas fa-drafting-compass"></i>
+          <div>
+            <strong>Projeto</strong>
+            <span>Pré-projeto alinhado ao edital e à banca</span>
+          </div>
+        </div>
+        <div class="hero__pillar">
+          <i class="fas fa-chalkboard-teacher"></i>
+          <div>
+            <strong>Banca</strong>
+            <span>Simulação com feedback e argumentação</span>
+          </div>
+        </div>
+        <div class="hero__pillar">
+          <i class="fas fa-graduation-cap"></i>
+          <div>
+            <strong>Aprovação</strong>
+            <span>Submissão completa e onboarding acadêmico</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero__actions">
+        <a href="#contato" class="btn-hero btn-hero--primary">
+          <i class="fas fa-comments"></i> Agendar Conversa Gratuita
+        </a>
+        <a href="#pacotes" class="btn-hero btn-hero--ghost">
+          <i class="fas fa-eye"></i> Ver Pacotes e Valores
+        </a>
+      </div>
+
+      <div class="hero__footer">
+        <img src="./assets/images/bruna-perfil.jpg" alt="Dra Bruna">
+        <div>
+          <div class="hero__footer-name"><em>Drª</em> Bruna Sirqueira</div>
+          <div class="hero__footer-role">Enfermeira e Mentora Acadêmica — UFMA • UEPA • UNESP</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero__right">
+      <div class="hero__photo-glow" aria-hidden="true"></div>
+      <div class="hero__photo">
+        <img src="./assets/images/bruna-hero.jpg" alt="Dra. Bruna Sirqueira">
+      </div>
+      <div class="hero__photo-dots" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SOBRE / TRAJETÓRIA ===== -->
+<section class="section section--alt" id="sobre">
+  <div class="section__inner">
+    <div class="section__eyebrow reveal">Trajetória</div>
+    <h2 class="section__heading reveal reveal-delay-1">
+      Acadêmica & <em>Profissional</em>
+    </h2>
+    <p class="section__desc reveal reveal-delay-2">
+      Uma trajetória construída com dedicação, ciência e compromisso com a formação de profissionais da saúde.
+    </p>
+    <div class="trajectory__grid">
+      <div class="trajectory__photo reveal">
+        <img src="./assets/images/bruna-perfil.jpg" alt="Dra. Bruna Sirqueira">
+      </div>
+      <div class="trajectory__content reveal reveal-delay-1">
+        <p class="trajectory__text">
+          Graduada em Enfermagem pela Universidade Estadual do Maranhão (UEMA), mestra pelo Programa Profissional de Pós-Graduação em Cirurgia e Pesquisa Experimental da Universidade do Estado do Pará (UEPA) e Doutora pelo Programa de Pós-Graduação em Enfermagem da Universidade Estadual Paulista (UNESP).
+        </p>
+        <p class="trajectory__text" style="margin-top:12px">
+          Professora efetiva do Magistério Superior do Curso de Medicina da Universidade Federal do Maranhão/CCIm-UFMA com mais de 10 anos de experiência no ensino superior.
+        </p>
+        <ul class="trajectory__list">
+          <li><i class="fas fa-check-circle"></i> Membro do Conselho Estadual de Educação do Maranhão (CCE-MA)</li>
+          <li><i class="fas fa-check-circle"></i> Consultora Científica da Startup G&G Tech</li>
+          <li><i class="fas fa-check-circle"></i> Autora e Organizadora do Livro: Estratégias para o Ensino Ativo em Habilidades Clínicas e Cirúrgicas</li>
+          <li><i class="fas fa-check-circle"></i> Membro do Projeto Hamy vinculado ao Instituto Nacional de Cuidados Oncológicos e Humanização</li>
+          <li><i class="fas fa-check-circle"></i> Elaboração e depósito de pedidos de patente</li>
+          <li><i class="fas fa-check-circle"></i> Organização de livros, solicitação de ISBN e desenvolvimento de produtos técnicos</li>
+          <li><i class="fas fa-check-circle"></i> Registro de vídeos junto à Agência Nacional do Cinema (ANCINE)</li>
+          <li><i class="fas fa-check-circle"></i> Revisora de periódicos científicos</li>
+          <li><i class="fas fa-check-circle"></i> Desenvolvimento de pesquisas metodológicas</li>
+          <li><i class="fas fa-check-circle"></i> Desenvolvimento de pesquisas com populações especiais, incluindo povos indígenas</li>
+          <li><i class="fas fa-check-circle"></i> Validação e avaliação de produtos técnicos</li>
+          <li><i class="fas fa-check-circle"></i> Orientação em escrita científica com base nas diretrizes da iniciativa EQUATOR Network</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MÉTODO ===== -->
+<section class="section" id="metodo">
+  <div class="section__inner">
+    <div class="section__eyebrow reveal">Método MAPP</div>
+    <h2 class="section__heading reveal reveal-delay-1">
+      Como Funciona o <em>Método MAPP?</em>
+    </h2>
+    <p class="section__desc reveal reveal-delay-2">
+      Acompanho o candidato do ponto inicial até a aprovação, com foco em critérios reais de avaliação acadêmica.
+    </p>
+    <div class="method__grid">
+      <div class="method__card reveal">
+        <div class="method__number">01</div>
+        <h4>Mapeamento Estratégico</h4>
+        <p>Diagnóstico completo do seu currículo, histórico acadêmico e identificação dos programas com maior chance de aprovação.</p>
+      </div>
+      <div class="method__card reveal reveal-delay-1">
+        <div class="method__number">02</div>
+        <h4>Arquitetura do Projeto</h4>
+        <p>Construção do pré-projeto com problema, justificativa, objetivos, revisão bibliográfica e metodologia alinhados ao edital.</p>
+      </div>
+      <div class="method__card reveal reveal-delay-2">
+        <div class="method__number">03</div>
+        <h4>Preparação para a Banca</h4>
+        <p>Simulação de banca com feedback gravado, refinamento do discurso e argumentação científica para defesa do projeto.</p>
+      </div>
+      <div class="method__card reveal reveal-delay-3">
+        <div class="method__number">04</div>
+        <h4>Aprovação e Adaptação</h4>
+        <p>Dossiê completo de submissâo, onboarding acadêmico e planejamento dos próximos objetivos na pós-graduação.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DURAÇÃO ===== -->
+<section class="section section--alt" id="duracao">
+  <div class="section__inner">
+    <div class="duration__box reveal">
+      <div class="section__eyebrow" style="color:rgba(255,255,255,0.7);justify-content:center">
+        <span style="width:24px;height:2px;background:rgba(255,255,255,0.4);border-radius:1px"></span> Duração
+      </div>
+      <div class="duration__value">
+        <em>3 a 6 meses</em>
+      </div>
+      <p class="duration__text">
+        Nossa mentoria tem duração de 3 a 6 meses, conforme a sua necessidade e os objetivos que deseja alcançar. O processo é personalizado, permitindo que você escolha até qual pilar deseja trabalhar, de acordo com suas metas e demandas profissionais.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PACOTES ===== -->
+<section class="section" id="pacotes">
+  <div class="section__inner">
+    <div class="section__eyebrow reveal">Nossos Pacotes</div>
+    <h2 class="section__heading reveal reveal-delay-1">
+      Escolha o pacote <em>ideal</em> para você
+    </h2>
+    <p class="section__desc reveal reveal-delay-2">
+      Pode começar pelo Pacote 01 e fazer upgrade a qualquer momento — pagando apenas a diferença.
+    </p>
+
+    <div class="packages__grid">
+      <!-- ESSENCIAL -->
+      <div class="package reveal">
+        <div class="package__name">Essencial</div>
+        <div class="package__title">Básico</div>
+        <div class="package__meta">
+          <span class="package__meta-item"><i class="fas fa-calendar"></i> 3 meses</span>
+          <span class="package__meta-item"><i class="fas fa-comments"></i> 6 encontros</span>
+          <span class="package__meta-item"><i class="fas fa-headset"></i> Suporte WhatsApp</span>
+        </div>
+        <ul class="package__list">
+          <li><i class="fas fa-check"></i> Diagnóstico inicial: raio-X do currículo</li>
+          <li><i class="fas fa-check"></i> Atualização do Lattes e criação do ORCID</li>
+          <li><i class="fas fa-check"></i> Mapeamento dos programas</li>
+          <li><i class="fas fa-check"></i> Análise de editais e requisitos</li>
+          <li><i class="fas fa-check"></i> Definição da linha de pesquisa ideal</li>
+          <li><i class="fas fa-check"></i> Plano estratégico personalizado</li>
+        </ul>
+        <div class="package__price">
+          <div class="package__price-label">Investimento</div>
+          <div class="package__price-value">R$ 1.085<small>,46</small></div>
+          <div class="package__installments">ou <strong>6x</strong> R$ 200,28 / <strong>8x</strong> R$ 156,71</div>
+        </div>
+        <a href="#contato" class="package__cta package__cta--secondary">Quero Esse</a>
+      </div>
+
+      <!-- ESTRATÉGICO -->
+      <div class="package package--featured reveal reveal-delay-1">
+        <div class="package__badge">Mais Vendido</div>
+        <div class="package__name">Estratégico</div>
+        <div class="package__title">Intermediário</div>
+        <div class="package__meta">
+          <span class="package__meta-item"><i class="fas fa-calendar"></i> 4 meses</span>
+          <span class="package__meta-item"><i class="fas fa-comments"></i> 8 encontros</span>
+          <span class="package__meta-item"><i class="fas fa-headset"></i> Suporte WhatsApp</span>
+        </div>
+        <ul class="package__list">
+          <li><i class="fas fa-check"></i> Tudo do Pacote Essencial</li>
+          <li><i class="fas fa-check"></i> Levantamento de produções científicas</li>
+          <li><i class="fas fa-check"></i> Construção do pré-projeto completo</li>
+          <li><i class="fas fa-check"></i> Revisão bibliográfica orientada</li>
+          <li><i class="fas fa-check"></i> Metodologia: escolha e justificativa</li>
+          <li><i class="fas fa-check"></i> Escrita acadêmica persuasiva (2 versões)</li>
+          <li><i class="fas fa-check"></i> Formatação às normas do programa</li>
+        </ul>
+        <div class="package__price">
+          <div class="package__price-label">Investimento</div>
+          <div class="package__price-value">R$ 1.447<small>,00</small></div>
+          <div class="package__installments">ou <strong>6x</strong> R$ 266,99 / <strong>8x</strong> R$ 208,91</div>
+        </div>
+        <a href="#contato" class="package__cta package__cta--primary">Quero Esse</a>
+      </div>
+
+      <!-- EXCELÊNCIA -->
+      <div class="package reveal reveal-delay-2">
+        <div class="package__name">Excelência</div>
+        <div class="package__title">Avançado</div>
+        <div class="package__meta">
+          <span class="package__meta-item"><i class="fas fa-calendar"></i> 6 meses</span>
+          <span class="package__meta-item"><i class="fas fa-comments"></i> 12 encontros</span>
+          <span class="package__meta-item"><i class="fas fa-headset"></i> Suporte prioritário</span>
+        </div>
+        <ul class="package__list">
+          <li><i class="fas fa-check"></i> Tudo dos pacotes Essencial e Estratégico</li>
+          <li><i class="fas fa-check"></i> Simulação de banca (2 rodadas)</li>
+          <li><i class="fas fa-check"></i> Refinamento do discurso científico</li>
+          <li><i class="fas fa-check"></i> Portfólio completo de submissão</li>
+          <li><i class="fas fa-check"></i> Antiplágio + revisão ortográfica</li>
+          <li><i class="fas fa-check"></i> Onboarding acadêmico</li>
+          <li><i class="fas fa-check"></i> Planejamento de próximos objetivos</li>
+        </ul>
+        <div class="package__price">
+          <div class="package__price-label">Investimento</div>
+          <div class="package__price-value">R$ 2.170<small>,00</small></div>
+          <div class="package__installments">ou <strong>6x</strong> R$ 400,38 / <strong>8x</strong> R$ 313,30</div>
+        </div>
+        <a href="#contato" class="package__cta package__cta--secondary">Quero Esse</a>
+      </div>
+    </div>
+
+    <p class="package__note reveal">Pode começar pelo Pacote 01 e fazer upgrade a qualquer momento — pagando apenas a diferença.</p>
+  </div>
+</section>
+
+<!-- ===== DEPOIMENTOS ===== -->
+<section class="section section--alt" id="depoimentos">
+  <div class="section__inner">
+    <div class="section__eyebrow reveal">Depoimentos</div>
+    <h2 class="section__heading reveal reveal-delay-1">
+      O que dizem os <em>mentorados?</em>
+    </h2>
+    <p class="section__desc reveal reveal-delay-2">
+      Histórias reais de profissionais que conquistaram suas aprovações.
+    </p>
+    <div class="testimonials__grid">
+      <div class="testimonial reveal">
+        <div class="testimonial__quote">&ldquo;</div>
+        <p class="testimonial__text">Bruna, tu é a melhor! Já te falei um milhão de vezes que tu é inspiração e quando crescer quero ser igual tu.</p>
+        <div class="testimonial__author">
+          <div class="testimonial__avatar">R.</div>
+          <div>
+            <div class="testimonial__name">Rosi</div>
+            <div class="testimonial__detail">Aprovada — Mestrado de Cirurgia e Pesquisa Experimental da UEPA · Conceito 5 na CAPES</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial reveal reveal-delay-1">
+        <div class="testimonial__quote">&ldquo;</div>
+        <p class="testimonial__text">Muito obrigada por todas as orientações, és excelente, muita alegria. Já te disse: você nos inspira.</p>
+        <div class="testimonial__author">
+          <div class="testimonial__avatar">J.C.</div>
+          <div>
+            <div class="testimonial__name">Juliana Cortez</div>
+            <div class="testimonial__detail">Aprovada — Mestrado CIPE UEPA · 2024.1</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial reveal reveal-delay-2">
+        <div class="testimonial__quote">&ldquo;</div>
+        <p class="testimonial__text">Felicidade me resume no dia de hoje. Agradeço a Deus e em especial à Dra Bruna Sirqueira, você é incrível.</p>
+        <div class="testimonial__author">
+          <div class="testimonial__avatar">V.G.</div>
+          <div>
+            <div class="testimonial__name">Verônnika Galvão</div>
+            <div class="testimonial__detail">Aprovada — Doutorado UNESP · 2026.1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="section" id="faq">
+  <div class="section__inner">
+    <div class="section__eyebrow reveal">Dúvidas</div>
+    <h2 class="section__heading reveal reveal-delay-1">
+      Perguntas <em>Frequentes</em>
+    </h2>
+    <div class="faq__grid">
+      <div class="faq__item reveal">
+        <button class="faq__question" onclick="toggleFaq(this)">
+          Preciso ter disponibilidade diária?
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq__answer">
+          <p>Não. A metodologia foi desenvolvida para profissionais ocupados. Com os encontros quinzenais e um planejamento adequado, 2 horas por dia são suficientes para avançar.</p>
+        </div>
+      </div>
+      <div class="faq__item reveal reveal-delay-1">
+        <button class="faq__question" onclick="toggleFaq(this)">
+          Posso mudar de pacote durante o acompanhamento?
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq__answer">
+          <p>Sim. O upgrade pode ser feito a qualquer momento, pagando apenas a diferença entre os pacotes.</p>
+        </div>
+      </div>
+      <div class="faq__item reveal reveal-delay-1">
+        <button class="faq__question" onclick="toggleFaq(this)">
+          O que acontece se eu for reprovado no processo seletivo?
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq__answer">
+          <p>Analisamos juntos o que pode ser melhorado e ajustamos a estratégia. O acompanhamento cobre a reapresentação dentro do período contratado.</p>
+        </div>
+      </div>
+      <div class="faq__item reveal reveal-delay-2">
+        <button class="faq__question" onclick="toggleFaq(this)">
+          Como funcionam os encontros?
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq__answer">
+          <p>Por videochamada, com duração de 60 a 90 minutos. Os horários são agendados com antecedência e semanalmente, podendo ser mantidos fixos ao longo do acompanhamento.</p>
+        </div>
+      </div>
+      <div class="faq__item reveal reveal-delay-2">
+        <button class="faq__question" onclick="toggleFaq(this)">
+          Posso cancelar o acompanhamento mensal?
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq__answer">
+          <p>Sim, com aviso de 15 dias de antecedência e sem multa. Também é possível solicitar pausa de até 1 mês por ano sem cobrança.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta" id="contato">
+  <div class="cta__inner">
+    <div class="section__eyebrow" style="color:rgba(255,255,255,0.6);justify-content:center">
+      <span style="width:24px;height:2px;background:rgba(255,255,255,0.4);border-radius:1px"></span> Pronto para começar?
+    </div>
+    <h2 class="cta__heading">
+      Entre em contato e agende uma<br><em>conversa inicial gratuita</em> de 20 minutos.
+    </h2>
+    <p class="cta__text">
+      Vamos entender o seu momento e indicar o caminho mais adequado para a sua aprovação.
+    </p>
+    <div class="cta__contacts">
+      <a href="https://wa.me/5599981222521" target="_blank" class="cta__contact">
+        <i class="fab fa-whatsapp"></i> (99) 9 8122-2521
+      </a>
+      <a href="mailto:resolutioac@gmail.com" class="cta__contact">
+        <i class="fas fa-envelope"></i> resolutioac@gmail.com
+      </a>
+    </div>
+    <a href="https://wa.me/5599981222521" target="_blank" class="btn-hero btn-hero--primary">
+      <i class="fab fa-whatsapp"></i> Agendar Conversa Gratuita
+    </a>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <p class="footer__text">&copy; 2026 <strong>Resolutio</strong> — Assessoria & Consultoria Acadêmica. Todos os direitos reservados.</p>
+</footer>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+  // Nav scroll effect
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+
+  // FAQ toggle
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq__item');
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq__item.open').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  }
+
+  // Active nav link
+  const sections = document.querySelectorAll('section[id]');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(sec => {
+      const top = sec.offsetTop - 120;
+      if (scrollY >= top) current = sec.getAttribute('id');
+    });
+    document.querySelectorAll('.nav__links a').forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+
+</body>
+</html>

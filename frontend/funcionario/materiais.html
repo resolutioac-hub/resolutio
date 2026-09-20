@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Materiais — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  body { font-family: var(--font-body); background: linear-gradient(170deg, #fcfaf6 0%, #f4efe8 100%); color: #1a1715; overflow-x: hidden; }
+  .sidebar { width: 260px; background: linear-gradient(180deg, #fff 0%, #fdfaf7 100%); border-right: 1px solid var(--line); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; box-shadow: 6px 0 20px rgba(30,21,19,0.04); }
+  .sidebar__brand { padding: 28px 22px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sidebar__title { font-family: var(--font-body); font-size: 1rem; font-weight: 800; letter-spacing: 0.12em; color: var(--primary-700); text-transform: uppercase; margin-top: 14px; }
+  .sidebar__subtitle { font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .nav__label { font-family: var(--font-body); font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 18px 14px 8px; }
+  .nav__item { color: var(--text); font-size: 0.82rem; padding: 10px 14px; border-radius: 10px; transition: background 150ms ease; display: flex; align-items: center; gap: 10px; }
+  .nav__item:hover { background: var(--primary-50); color: var(--primary-700); }
+  .nav__item--active { background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(114,80,71,0.25); }
+  .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+  .nav__icon svg { width: 16px; height: 16px; }
+  .sidebar__footer { padding: 16px; border-top: 1px solid var(--line-soft); }
+  .user { background: rgba(255,255,255,0.8); border-radius: 14px; padding: 12px; border: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .user__avatar { background: linear-gradient(135deg, var(--primary), var(--primary-700)); box-shadow: 0 4px 12px rgba(114,80,71,0.25); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.72rem; color: #fff; }
+  .user__name { color: var(--ink); font-weight: 600; font-size: 0.80rem; }
+  .user__email { color: var(--muted); font-size: 0.66rem; }
+  .main { flex: 1; margin-left: 260px; min-height: 100vh; }
+  .topbar { height: 72px; background: rgba(255,255,255,0.75); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(30,21,19,0.06); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 50; }
+  .topbar__title { font-family: var(--font-body); font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+  .topbar__subtitle { font-size: 0.80rem; color: var(--muted); }
+  .page { padding: 28px 32px; max-width: 1180px; width: 100%; margin: 0 auto; }
+  @keyframes riseUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-up { opacity: 0; transform: translateY(28px); }
+  .anim-up.is-visible { animation: riseUp 0.9s cubic-bezier(0.22,1,0.36,1) both; }
+  .section-card { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); margin-bottom: 20px; }
+  .section-card__title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 400; color: var(--ink); margin-bottom: 16px; }
+  .material-card { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--line-soft); border-radius: 14px; margin-bottom: 10px; background: #fff; transition: transform 0.2s; }
+  .material-card:hover { transform: translateY(-2px); border-color: var(--primary-200); }
+  .material-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--primary-50); border: 1px solid var(--primary-200); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0; }
+  .material-icon svg { width: 20px; height: 20px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+  .badge--primary { background: var(--primary-50); color: var(--primary); }
+  .filters-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  @media (max-width: 768px) { .page { padding: 16px; } .main { margin-left: 0; } .sidebar { display: none; } .sidebar.is-open { display: flex; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <img src="../assets/images/logo-branca.png" alt="Resolutio" style="width:100%;max-width:180px;height:auto;object-fit:contain">
+    </div>
+    <nav class="sidebar__nav" id="dynamicNav"></nav>
+    <div class="sidebar__footer">
+      <div class="user"><div class="user__avatar" id="userAvatar">FU</div><div><div class="user__name" id="userName">Funcionário</div><div class="user__email" id="userEmail">funcionario@resolutio.com</div></div></div>
+      <button class="btn btn--danger btn--sm" style="width:100%;margin-top:10px" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('is-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div>
+          <div class="topbar__title">Materiais e Documentos</div>
+          <div class="topbar__subtitle">Upload e compartilhamento de materiais dos clientes</div>
+        </div>
+      </div>
+      <button class="btn btn--primary btn--sm" onclick="openModal('newMaterialModal')">+ Adicionar Material</button>
+    </header>
+
+    <div class="page">
+      <div class="filters-bar">
+        <select id="filterCliente" class="form-control" style="flex:1" onchange="filterMateriais()">
+          <option value="">Todos os clientes</option>
+        </select>
+        <select id="filterTipo" class="form-control" style="width:auto" onchange="filterMateriais()">
+          <option value="">Todos os tipos</option>
+          <option value="edital">Edital</option>
+          <option value="projeto">Projeto</option>
+          <option value="material_estudo">Material de Estudo</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+
+      <div class="section-card anim-up">
+        <h2 class="section-card__title">Lista de Materiais</h2>
+        <div id="materiaisList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Novo Material -->
+<div class="modal-overlay" id="newMaterialModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Novo Material</h3>
+      <button class="modal-close" onclick="closeModal('newMaterialModal')" aria-label="Fechar">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="matCliente">Cliente</label>
+        <select id="matCliente" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label for="matTitulo">Título do Material</label>
+        <input id="matTitulo" class="form-control" placeholder="Ex: Projeto Acadêmico V1.pdf">
+      </div>
+      <div class="form-group">
+        <label for="matTipo">Tipo de Documento</label>
+        <select id="matTipo" class="form-control">
+          <option value="edital">Edital / Regulamento</option>
+          <option value="projeto">Projeto / Minuta</option>
+          <option value="material_estudo">Material de Estudo</option>
+          <option value="outro">Outro Documento</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="matUrl">Link do Documento (Google Drive, Notion, Cloud...)</label>
+        <input id="matUrl" class="form-control" placeholder="https://drive.google.com/file/d/...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost" onclick="closeModal('newMaterialModal')">Cancelar</button>
+      <button class="btn btn--primary" onclick="createMaterial()">Salvar Material</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="./funcionario-nav.js"></script>
+<script>
+  requireAuth(['funcionario']); setupSidebar(); renderFuncionarioNav('materiais');
+
+  const tipoLabel = { edital: 'Edital', projeto: 'Projeto', material_estudo: 'Material de estudo', outro: 'Outro' };
+  let allMateriais = [];
+  let myClients = [];
+
+  function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+  function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+  async function load() {
+    const user = getSession().user;
+    const nome = user?.nome || user?.email?.split('@')[0] || 'funcionário';
+    const funcionarios = await API.funcionarios.list();
+    const func = funcionarios.find(f => f.nome === nome || f.email === user?.email);
+    const funcNome = func?.nome || nome;
+
+    const isDirectorOrCommercial = func?.funcao === 'diretora_academica' || func?.funcao === 'comercial' || /diretora|comercial/i.test(func?.cargo || '') || /eduarda|bruna sirqueira/i.test(func?.nome || nome);
+
+    const clientes = await API.clientes.list();
+    if (isDirectorOrCommercial) {
+      myClients = clientes;
+    } else {
+      myClients = clientes.filter(c => !c.funcionario || c.funcionario === funcNome || c.funcionario === nome);
+    }
+
+    // Populate Client selects
+    const clientOpts = myClients.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+    document.getElementById('matCliente').innerHTML = clientOpts || '<option value="">Nenhum cliente cadastrado</option>';
+    document.getElementById('filterCliente').innerHTML = '<option value="">Todos os clientes</option>' + clientOpts;
+
+    allMateriais = await API.materiais.list();
+    filterMateriais();
+  }
+
+  function filterMateriais() {
+    const cli = document.getElementById('filterCliente').value;
+    const tip = document.getElementById('filterTipo').value;
+
+    let filtered = allMateriais;
+
+    if (cli) {
+      filtered = filtered.filter(m => m.cliente === cli);
+    } else if (myClients.length > 0) {
+      // Show materials belonging to employee's clients or created by everyone
+      filtered = filtered.filter(m => myClients.some(c => c.nome === m.cliente) || !m.cliente);
+    }
+
+    if (tip) {
+      filtered = filtered.filter(m => m.tipo === tip);
+    }
+
+    renderMateriais(filtered);
+  }
+
+  function renderMateriais(list) {
+    if (!list.length) {
+      document.getElementById('materiaisList').innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:40px 0">Nenhum material encontrado.</p>';
+      return;
+    }
+
+    document.getElementById('materiaisList').innerHTML = list.map(m => `
+      <div class="material-card">
+        <div class="material-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:0.95rem;color:var(--ink)">${m.titulo}</div>
+          <div style="font-size:0.80rem;color:var(--muted);margin-top:2px">Cliente: <strong>${m.cliente || 'Geral'}</strong> · ${formatDate(m.data || new Date().toISOString())}</div>
+        </div>
+        <span class="badge badge--primary" style="margin-right:8px">${tipoLabel[m.tipo] || m.tipo}</span>
+        <div style="display:flex;gap:6px">
+          ${m.url ? `<a href="${m.url}" target="_blank" class="btn btn--secondary btn--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg> Abrir</a>` : ''}
+          <button class="btn btn--ghost btn--sm" style="color:var(--danger)" onclick="deleteMaterial('${m.id}')" aria-label="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        </div>
+      </div>`).join('');
+  }
+
+  async function createMaterial() {
+    const cliente = document.getElementById('matCliente').value;
+    const titulo = document.getElementById('matTitulo').value.trim();
+    const tipo = document.getElementById('matTipo').value;
+    const url = document.getElementById('matUrl').value.trim();
+
+    if (!titulo) return toast('Informe o título do material.', 'error');
+    if (!cliente) return toast('Selecione um cliente.', 'error');
+
+    try {
+      await API.materiais.create({ cliente, titulo, tipo, url, data: new Date().toISOString().split('T')[0] });
+      closeModal('newMaterialModal');
+      document.getElementById('matTitulo').value = '';
+      document.getElementById('matUrl').value = '';
+      toast('Material adicionado com sucesso!', 'success');
+      load();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function deleteMaterial(id) {
+    if (!confirm('Deseja realmente remover este material?')) return;
+    try {
+      await API.materiais.delete(id);
+      toast('Material removido!', 'success');
+      load();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  load();
+
+  document.querySelectorAll('.anim-up').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight) el.classList.add('is-visible');
+  });
+</script>
+</body>
+</html>

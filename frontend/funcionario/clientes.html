@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meus Clientes — Resolutio</title>
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/resolutio-redesign.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --font-display: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif; --font-body: 'Space Grotesk', 'Albert Sans', sans-serif; }
+  body { font-family: var(--font-body); background: linear-gradient(170deg, #fcfaf6 0%, #f4efe8 100%); color: #1a1715; overflow-x: hidden; }
+  .sidebar { width: 260px; background: linear-gradient(180deg, #fff 0%, #fdfaf7 100%); border-right: 1px solid var(--line); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; box-shadow: 6px 0 20px rgba(30,21,19,0.04); }
+  .sidebar__brand { padding: 28px 22px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .nav__label { font-family: var(--font-body); font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 18px 14px 8px; }
+  .nav__item { color: var(--text); font-size: 0.82rem; padding: 10px 14px; border-radius: 10px; transition: background 150ms ease; display: flex; align-items: center; gap: 10px; }
+  .nav__item:hover { background: var(--primary-50); color: var(--primary-700); }
+  .nav__item--active { background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(114,80,71,0.25); }
+  .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+  .nav__icon svg { width: 16px; height: 16px; }
+  .sidebar__footer { padding: 16px; border-top: 1px solid var(--line-soft); }
+  .user { background: rgba(255,255,255,0.8); border-radius: 14px; padding: 12px; border: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .user__avatar { background: linear-gradient(135deg, var(--primary), var(--primary-700)); box-shadow: 0 4px 12px rgba(114,80,71,0.25); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.72rem; color: #fff; }
+  .user__name { color: var(--ink); font-weight: 600; font-size: 0.80rem; }
+  .user__email { color: var(--muted); font-size: 0.66rem; }
+  .main { flex: 1; margin-left: 260px; min-height: 100vh; }
+  .topbar { height: 72px; background: rgba(255,255,255,0.75); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(30,21,19,0.06); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 50; }
+  .topbar__title { font-family: var(--font-body); font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+  .topbar__subtitle { font-size: 0.80rem; color: var(--muted); }
+  .page { padding: 28px 32px; max-width: 1180px; width: 100%; margin: 0 auto; }
+  @keyframes riseUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-up { opacity: 0; transform: translateY(28px); }
+  .anim-up.is-visible { animation: riseUp 0.9s cubic-bezier(0.22,1,0.36,1) both; }
+  .section-card { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); }
+  .client-card { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 24px rgba(30,21,19,0.04); transition: transform 200ms, box-shadow 200ms; margin-bottom: 16px; }
+  .client-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(114,80,71,0.10); }
+  .client-header { display: flex; gap: 16px; align-items: center; }
+  .client-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-700)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; }
+  .client-info { flex: 1; }
+  .client-name { font-family: var(--font-display); font-size: 1.25rem; font-weight: 500; color: var(--ink); cursor: pointer; }
+  .client-name:hover { color: var(--primary); text-decoration: underline; }
+  .client-meta { font-size: 0.80rem; color: var(--muted); margin-top: 2px; }
+  .progress-bar { height: 6px; background: var(--line-soft); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--bege)); border-radius: 999px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+  .badge--info { background: #eef2ff; color: #465fff; }
+  .badge--success { background: #ecfdf5; color: #10b981; }
+  .badge--warning { background: #fffbeb; color: #d97706; }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .badge--primary { background: var(--primary-50); color: var(--primary); }
+  .client-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; padding-top: 12px; border-top: 1px solid var(--line-soft); flex-wrap: wrap; }
+  .search-box { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
+  .search-input { flex: 1; background: #fff; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 16px; font-size: 0.88rem; outline: none; transition: border-color 0.2s; }
+  .search-input:focus { border-color: var(--primary); }
+  .client-info-box { background: var(--primary-50); border: 1px solid var(--primary-200); border-radius: 12px; padding: 12px 16px; font-size: 0.82rem; color: var(--ink); margin-bottom: 14px; }
+  .calc-badge { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; border-radius: 8px; padding: 6px 12px; font-size: 0.78rem; font-weight: 700; margin-top: 6px; display: inline-block; }
+  @media (max-width: 768px) { .page { padding: 16px; } .main { margin-left: 0; } .sidebar { display: none; } .sidebar.is-open { display: flex; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <img src="../assets/images/logo-branca.png" alt="Resolutio" style="width:100%;max-width:180px;height:auto;object-fit:contain">
+    </div>
+    <nav class="sidebar__nav" id="dynamicNav"></nav>
+    <div class="sidebar__footer">
+      <div class="user"><div class="user__avatar" id="userAvatar">FU</div><div><div class="user__name" id="userName">Funcionário</div><div class="user__email" id="userEmail">funcionario@resolutio.com</div></div></div>
+      <button class="btn btn--danger btn--sm" style="width:100%;margin-top:10px" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('is-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div>
+          <div class="topbar__title">Meus clientes</div>
+          <div class="topbar__subtitle">Clientes sob sua responsabilidade — Emissão de cobrança com valor automático</div>
+        </div>
+      </div>
+      <button class="btn btn--primary btn--sm" id="newClientButton" style="display:none" onclick="openModal('newClientModal')">+ Novo cliente</button>
+    </header>
+
+    <div class="page">
+      <div class="search-box">
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar cliente por nome, e-mail ou telefone..." oninput="filterClients()">
+        <select id="pilarFilter" class="form-control" style="width:auto" onchange="filterClients()">
+          <option value="">Todos os pilares</option>
+          <option value="1">Pilar 1 — Diagnóstico</option>
+          <option value="2">Pilar 2 — Planejamento</option>
+          <option value="3">Pilar 3 — Execução</option>
+          <option value="4">Pilar 4 — Conclusão</option>
+        </select>
+      </div>
+
+      <div class="section-card anim-up">
+        <div id="clientesList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Novo Cliente -->
+<div class="modal-overlay" id="newClientModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Novo cliente</h3><button class="modal-close" onclick="closeModal('newClientModal')" aria-label="Fechar">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label for="newClientName">Nome completo</label><input id="newClientName" class="form-control"></div>
+      <div class="form-group"><label for="newClientEmail">E-mail</label><input id="newClientEmail" class="form-control" type="email"></div>
+      <div class="form-group"><label for="newClientWhats">WhatsApp</label><input id="newClientWhats" class="form-control" inputmode="numeric" placeholder="(99) 99999-9999" oninput="this.value=formatPhoneBR(this.value)"></div>
+      <div class="form-group"><label for="newClientCpf">CPF</label><input id="newClientCpf" class="form-control" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=formatCPF(this.value)"></div>
+      <div class="form-group"><label for="newClientPackage">Pacote</label><select id="newClientPackage" class="form-control"><option value="essencial">Essencial</option><option value="estrategico">Estratégico</option><option value="excelencia">Excelência</option></select></div>
+      <div class="form-group">
+        <label for="newClientEntrada">Valor de Entrada (R$)</label>
+        <input id="newClientEntrada" class="form-control" type="number" step="0.01" placeholder="Ex: 500.00 (opcional)">
+        <small style="color:var(--muted);font-size:0.75rem">Se informado, este valor constará automaticamente no financeiro de hoje como pago.</small>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('newClientModal')">Cancelar</button><button class="btn btn--primary" onclick="createClient()">Cadastrar cliente</button></div>
+  </div>
+</div>
+
+<!-- Modal Emitir Cobrança Direta por Cliente -->
+<div class="modal-overlay" id="quickCobrancaModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3 id="cobModalTitle">Emitir Cobrança</h3>
+      <button class="modal-close" onclick="closeModal('quickCobrancaModal')" aria-label="Fechar">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cobClientNameHidden">
+      
+      <!-- Dados automáticos preenchidos do cliente -->
+      <div class="client-info-box">
+        <div style="font-weight:700;font-size:0.95rem;color:var(--primary);margin-bottom:6px" id="cobShowClientName">Cliente</div>
+        <div><strong>E-mail:</strong> <span id="cobShowClientEmail">—</span></div>
+        <div><strong>CPF:</strong> <span id="cobShowClientCpf">—</span></div>
+        <div><strong>WhatsApp:</strong> <span id="cobShowClientWhats">—</span></div>
+        <div><strong>Pacote:</strong> <span id="cobShowClientPacote">—</span></div>
+        <div id="quickCobCalcBadge" class="calc-badge">⚡ Valor Calculado Automático</div>
+      </div>
+
+      <div class="form-group">
+        <label for="quickCobDescricao">Descrição da Cobrança / Parcela (Automática)</label>
+        <input id="quickCobDescricao" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="quickCobValor">Valor (R$) (Calculado Automático)</label>
+        <input id="quickCobValor" class="form-control" type="number" step="0.01">
+      </div>
+      <div class="form-group">
+        <label for="quickCobVencimento">Data de Vencimento</label>
+        <input id="quickCobVencimento" class="form-control" type="date">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn--ghost" onclick="closeModal('quickCobrancaModal')">Cancelar</button>
+      <button class="btn btn--primary" onclick="submitQuickCobranca()">Emitir & Gerar WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detalhes & Ações do Cliente -->
+<div class="modal-overlay" id="clientDetailModal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h3 id="modalClientTitle">Detalhes do Cliente</h3>
+      <button class="modal-close" onclick="closeModal('clientDetailModal')" aria-label="Fechar">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="detailClientId">
+      <div style="background:var(--primary-50);padding:16px;border-radius:12px;margin-bottom:16px;display:flex;gap:12px;align-items:center">
+        <div id="detailAvatar" style="width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem"></div>
+        <div>
+          <div id="detailName" style="font-weight:700;font-size:1.1rem;color:var(--ink)"></div>
+          <div id="detailContact" style="font-size:0.8rem;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label style="font-weight:700;font-size:0.85rem;color:var(--ink);display:block;margin-bottom:8px">Progresso da Mentoria / Pilar Atual</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select id="detailPilarSelect" class="form-control" style="flex:1">
+            <option value="1">Pilar 1 — Diagnóstico Inicial</option>
+            <option value="2">Pilar 2 — Planejamento Estratégico</option>
+            <option value="3">Pilar 3 — Execução e Acompanhamento</option>
+            <option value="4">Pilar 4 — Consolidação e Entrega</option>
+          </select>
+          <button class="btn btn--secondary btn--sm" onclick="savePilarChange()">Salvar Pilar</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label style="font-weight:700;font-size:0.85rem;color:var(--ink);display:block;margin-bottom:8px">Ações Rápidas do Colaborador</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn--warning btn--sm" onclick="emitCobrancaFromDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg> Emitir Cobrança</button>
+          <button class="btn btn--primary btn--sm" onclick="scheduleForClient()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Agendar Encontro</button>
+          <a id="detailWhatsLink" href="#" target="_blank" class="btn btn--ghost btn--sm" style="display:inline-flex;align-items:center;gap:4px;color:#10b981;border-color:#10b981"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Abrir WhatsApp</a>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-weight:700;font-size:0.85rem;color:var(--ink);display:block;margin-bottom:8px">Observações & Anotações Internas</label>
+        <textarea id="detailNotes" class="form-control" rows="4" placeholder="Adicione observações sobre o andamento do cliente, necessidades ou combinados..."></textarea>
+        <button class="btn btn--ghost btn--sm" style="margin-top:8px" onclick="saveClientNotes()">Salvar Observações</button>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('clientDetailModal')">Fechar</button></div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="./funcionario-nav.js"></script>
+<script>
+  requireAuth(['funcionario']); setupSidebar(); renderFuncionarioNav('clientes');
+
+  const PACOTES_PRECOS = {
+    essencial: { avista: 1085.46, '6x': 200.28, '8x': 156.71, label: 'Essencial' },
+    estrategico: { avista: 1447.00, '6x': 266.99, '8x': 208.91, label: 'Estratégico' },
+    excelencia: { avista: 2170.00, '6x': 400.38, '8x': 313.30, label: 'Excelência' }
+  };
+
+  const pacoteLabel = { excelencia: 'Excelência', estrategico: 'Estratégico', essencial: 'Essencial' };
+  let allMyClients = [];
+  let allCobrancas = [];
+
+  function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+  function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+  async function createClient() {
+    const user = getSession().user;
+    const nome = user?.nome || user?.email?.split('@')[0] || 'funcionário';
+    const whatsapp = document.getElementById('newClientWhats').value.trim();
+    const cpf = document.getElementById('newClientCpf').value.trim();
+    const pacote = document.getElementById('newClientPackage').value;
+    const entradaVal = parseFloat(document.getElementById('newClientEntrada').value) || 0;
+
+    const data = { nome:document.getElementById('newClientName').value.trim(), email:document.getElementById('newClientEmail').value.trim(), whatsapp, cpf, telefone:whatsapp, pacote, funcionario:nome };
+    if (!data.nome || !data.email) return toast('Informe nome e e-mail.', 'error');
+    if (cpf.replace(/\D/g,'').length !== 11) return toast('Informe um CPF válido.', 'error');
+    if (whatsapp.replace(/\D/g,'').length < 10) return toast('Informe um WhatsApp válido.', 'error');
+    
+    try {
+      await API.clientes.create(data);
+
+      if (entradaVal > 0) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        await API.financeiro.create({
+          cliente: data.nome,
+          email: data.email,
+          whatsapp: data.whatsapp,
+          cpf: data.cpf,
+          descricao: `Entrada da Mentoria (${pacoteLabel[pacote] || pacote})`,
+          valor: entradaVal,
+          vencimento: todayStr,
+          data: todayStr,
+          status: 'pago'
+        });
+      }
+
+      closeModal('newClientModal');
+      toast('Cliente cadastrado e entrada registrada no financeiro!', 'success');
+      load();
+    } catch (error) { toast(error.message, 'error'); }
+  }
+
+  async function load() {
+    const user = getSession().user;
+    const nome = user?.nome || user?.email?.split('@')[0] || 'funcionário';
+    const funcionarios = await API.funcionarios.list();
+    const func = funcionarios.find(f => f.nome === nome || f.email === user?.email);
+    const funcNome = func?.nome || nome;
+    
+    const isDirectorOrCommercial = func?.funcao === 'diretora_academica' || func?.funcao === 'comercial' || /diretora|comercial/i.test(func?.cargo || '') || /eduarda|bruna sirqueira/i.test(func?.nome || nome);
+    document.getElementById('newClientButton').style.display = isDirectorOrCommercial ? 'inline-flex' : 'none';
+
+    const clientes = await API.clientes.list();
+    allCobrancas = await API.financeiro.list();
+
+    if (isDirectorOrCommercial) {
+      allMyClients = clientes;
+    } else {
+      allMyClients = clientes.filter(c => !c.funcionario || c.funcionario === funcNome || c.funcionario === nome);
+    }
+
+    renderClients(allMyClients);
+  }
+
+  function filterClients() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const pilar = document.getElementById('pilarFilter').value;
+
+    let filtered = allMyClients.filter(c => {
+      const matchQuery = !q || (c.nome && c.nome.toLowerCase().includes(q)) || (c.email && c.email.toLowerCase().includes(q)) || (c.whatsapp && c.whatsapp.includes(q));
+      const matchPilar = !pilar || clientePilar(c).toString() === pilar;
+      return matchQuery && matchPilar;
+    });
+
+    renderClients(filtered);
+  }
+
+  function renderClients(list) {
+    if (!list.length) {
+      document.getElementById('clientesList').innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:40px 0">Nenhum cliente encontrado.</p>';
+      return;
+    }
+
+    document.getElementById('clientesList').innerHTML = list.map(c => {
+      const p = clientePilar(c);
+      const pct = pilarProgresso(p);
+      const cleanPhone = (c.whatsapp || c.telefone || '').replace(/\D/g, '');
+      const whatsUrl = cleanPhone ? `https://wa.me/55${cleanPhone}` : '#';
+
+      return `
+      <div class="client-card">
+        <div class="client-header">
+          <div class="client-avatar">${c.avatar || (c.nome ? c.nome.slice(0,2).toUpperCase() : 'CL')}</div>
+          <div class="client-info">
+            <div class="client-name" onclick="openClientDetail('${c.id}')" title="Clique para abrir detalhes">${c.nome}</div>
+            <div class="client-meta">E-mail: <strong>${c.email}</strong> · CPF: <strong>${c.cpf || '—'}</strong> · Whats: <strong>${c.whatsapp || '—'}</strong></div>
+            <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span class="badge badge--info"><span class="badge-dot"></span>Pilar ${p} — ${pilarNome(p)}</span>
+              <span class="badge badge--primary"><span class="badge-dot"></span>${labelForStatus(c.status)}</span>
+              <span class="badge badge--warning" style="font-size:0.68rem">Pacote: ${pacoteLabel[c.pacote] || c.pacote}</span>
+            </div>
+          </div>
+          <div style="text-align:right;min-width:110px">
+            <div style="font-size:0.68rem;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Progresso</div>
+            <div class="progress-bar" style="width:100%"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div style="font-size:0.85rem;font-weight:700;color:var(--ink);margin-top:4px">${pct}%</div>
+          </div>
+        </div>
+
+        <div class="client-actions">
+          <button class="btn btn--warning btn--sm" onclick="openCobrancaForClient('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h7"/></svg> Emitir Cobrança</button>
+          ${cleanPhone ? `<a href="${whatsUrl}" target="_blank" class="btn btn--ghost btn--sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> WhatsApp</a>` : ''}
+          <button class="btn btn--ghost btn--sm" onclick="advancePilarQuick('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><path d="M5 12h14M12 5l7 7-7 7"/></svg> Avançar Pilar</button>
+          <button class="btn btn--secondary btn--sm" onclick="quickSchedule('${c.nome.replace(/'/g, "\\'")}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Agendar</button>
+          <button class="btn btn--primary btn--sm" onclick="openClientDetail('${c.id}')">Ver Detalhes / Obs</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function calcularCobrancaCliente(client) {
+    if (!client) return { valor: 0, descricao: 'Cobrança Mentoria', parcelaNum: 1, totalParcelas: 6 };
+
+    const pKey = (client.pacote || 'essencial').toLowerCase();
+    const info = PACOTES_PRECOS[pKey] || PACOTES_PRECOS.essencial;
+    
+    const cobrancasDoCliente = allCobrancas.filter(c => c.cliente === client.nome);
+    const proximaParcela = cobrancasDoCliente.length + 1;
+    const totalParcelas = client.parcelas_total || 6;
+    const isAvista = client.tipo_pagamento === 'avista';
+
+    let valor = 0;
+    if (client.parcela_valor && client.parcela_valor > 0) {
+      valor = client.parcela_valor;
+    } else if (isAvista) {
+      valor = client.valor_total || info.avista;
+    } else {
+      valor = totalParcelas === 8 ? info['8x'] : info['6x'];
+    }
+
+    const desc = isAvista ? `Pagamento Integral Mentoria — ${info.label}` : `Parcela ${proximaParcela}/${totalParcelas} — Mentoria ${info.label}`;
+
+    return {
+      valor: parseFloat(valor.toFixed(2)),
+      descricao: desc,
+      parcelaNum: proximaParcela,
+      totalParcelas,
+      pacoteLabel: info.label
+    };
+  }
+
+  function openCobrancaForClient(clientId) {
+    const client = allMyClients.find(c => c.id === clientId);
+    if (!client) return;
+
+    document.getElementById('cobClientNameHidden').value = client.nome;
+    document.getElementById('cobModalTitle').textContent = `Emitir Cobrança: ${client.nome}`;
+    document.getElementById('cobShowClientName').textContent = client.nome;
+    document.getElementById('cobShowClientEmail').textContent = client.email || 'Não informado';
+    document.getElementById('cobShowClientCpf').textContent = client.cpf || 'Não informado';
+    document.getElementById('cobShowClientWhats').textContent = client.whatsapp || client.telefone || 'Não informado';
+    document.getElementById('cobShowClientPacote').textContent = pacoteLabel[client.pacote] || client.pacote || 'Não informado';
+
+    // Cálculo automático do valor da cobrança
+    const calc = calcularCobrancaCliente(client);
+    document.getElementById('quickCobDescricao').value = calc.descricao;
+    document.getElementById('quickCobValor').value = calc.valor;
+    document.getElementById('quickCobCalcBadge').textContent = `⚡ Valor calculado automaticamente: R$ ${calc.valor.toLocaleString('pt-BR', {minimumFractionDigits:2})} (${calc.descricao})`;
+
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 7);
+    document.getElementById('quickCobVencimento').value = defaultDate.toISOString().split('T')[0];
+
+    openModal('quickCobrancaModal');
+  }
+
+  async function submitQuickCobranca() {
+    const clienteNome = document.getElementById('cobClientNameHidden').value;
+    const client = allMyClients.find(c => c.nome === clienteNome);
+    const descricao = document.getElementById('quickCobDescricao').value.trim();
+    const valor = parseFloat(document.getElementById('quickCobValor').value);
+    const vencimento = document.getElementById('quickCobVencimento').value;
+
+    if (!descricao || !valor) return toast('Informe descrição e valor da cobrança.', 'error');
+
+    try {
+      await API.financeiro.create({
+        cliente: clienteNome,
+        email: client?.email || '',
+        whatsapp: client?.whatsapp || client?.telefone || '',
+        cpf: client?.cpf || '',
+        descricao,
+        valor,
+        vencimento: vencimento || new Date().toISOString().split('T')[0],
+        status: 'pendente',
+        data: new Date().toISOString().split('T')[0]
+      });
+
+      closeModal('quickCobrancaModal');
+
+      // Se tiver whatsapp, sugerir envio imediato
+      const cleanPhone = (client?.whatsapp || client?.telefone || '').replace(/\D/g, '');
+      if (cleanPhone) {
+        const valStr = valor.toLocaleString('pt-BR', {minimumFractionDigits:2});
+        const dateStr = formatDate(vencimento);
+        const msgText = `Olá, ${clienteNome}! Tudo bem?\n\nSegue a cobrança referente à sua Mentoria Resolutio:\n📌 *${descricao}*\n💰 *Valor:* R$ ${valStr}\n📅 *Vencimento:* ${dateStr}\n\nQualquer dúvida, estamos à disposição!`;
+        const whatsUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msgText)}`;
+        
+        toast('Cobrança emitida com valor calculado! Abrindo WhatsApp...', 'success');
+        setTimeout(() => window.open(whatsUrl, '_blank'), 800);
+      } else {
+        toast('Cobrança registrada com sucesso!', 'success');
+      }
+
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function emitCobrancaFromDetail() {
+    const clientId = document.getElementById('detailClientId').value;
+    closeModal('clientDetailModal');
+    openCobrancaForClient(clientId);
+  }
+
+  async function advancePilarQuick(clientId) {
+    try {
+      const client = allMyClients.find(c => c.id === clientId);
+      if (!client) return;
+      const currentPilar = clientePilar(client);
+      const nextPilar = Math.min(4, currentPilar + 1);
+      if (nextPilar === currentPilar) return toast('Cliente já está no pilar máximo (Pilar 4).', 'info');
+
+      await API.clientes.update(clientId, { pilar: nextPilar });
+      toast(`Cliente avançado para o Pilar ${nextPilar}!`, 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function quickSchedule(clientName) {
+    window.location.href = `./agendamento.html?cliente=${encodeURIComponent(clientName)}`;
+  }
+
+  function openClientDetail(clientId) {
+    const client = allMyClients.find(c => c.id === clientId);
+    if (!client) return;
+
+    document.getElementById('detailClientId').value = client.id;
+    document.getElementById('modalClientTitle').textContent = `Cliente: ${client.nome}`;
+    document.getElementById('detailAvatar').textContent = client.avatar || client.nome.slice(0,2).toUpperCase();
+    document.getElementById('detailName').textContent = client.nome;
+    document.getElementById('detailContact').textContent = `${client.email || ''} | CPF: ${client.cpf || 'Não informado'} | WhatsApp: ${client.whatsapp || 'Não informado'} | Pacote: ${pacoteLabel[client.pacote] || client.pacote}`;
+    
+    document.getElementById('detailPilarSelect').value = clientePilar(client);
+    document.getElementById('detailNotes').value = client.observacoes || client.notas || '';
+
+    const cleanPhone = (client.whatsapp || client.telefone || '').replace(/\D/g, '');
+    const whatsBtn = document.getElementById('detailWhatsLink');
+    if (cleanPhone) {
+      whatsBtn.href = `https://wa.me/55${cleanPhone}`;
+      whatsBtn.style.display = 'inline-flex';
+    } else {
+      whatsBtn.style.display = 'none';
+    }
+
+    openModal('clientDetailModal');
+  }
+
+  async function savePilarChange() {
+    const id = document.getElementById('detailClientId').value;
+    const newPilar = parseInt(document.getElementById('detailPilarSelect').value, 10);
+    try {
+      await API.clientes.update(id, { pilar: newPilar });
+      toast('Pilar do cliente atualizado!', 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function saveClientNotes() {
+    const id = document.getElementById('detailClientId').value;
+    const notes = document.getElementById('detailNotes').value.trim();
+    try {
+      await API.clientes.update(id, { observacoes: notes });
+      toast('Observações salvas com sucesso!', 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function scheduleForClient() {
+    const name = document.getElementById('detailName').textContent;
+    quickSchedule(name);
+  }
+
+  load();
+
+  document.querySelectorAll('.anim-up').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight) el.classList.add('is-visible');
+  });
+</script>
+</body>
+</html>
