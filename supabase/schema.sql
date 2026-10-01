@@ -188,28 +188,69 @@ CREATE TABLE despesas (
 -- CONTRATOS
 -- ------------------------------------------------------------
 CREATE TABLE contratos (
-  id          TEXT PRIMARY KEY,
-  cliente     TEXT NOT NULL,
-  valor       NUMERIC(12,2),
-  arquivo     TEXT DEFAULT '—',
-  status      contrato_status DEFAULT 'rascunho',
-  enviado_em  TEXT DEFAULT '—',
-  assinado_em TEXT DEFAULT '—',
-  created_at  TIMESTAMPTZ DEFAULT now()
+  id             TEXT PRIMARY KEY,
+  cliente        TEXT NOT NULL,
+  pacote         TEXT,
+  valor          NUMERIC(12,2),
+  observacoes    TEXT,
+  arquivo        TEXT DEFAULT '—',
+  -- Referencia ao objeto no Supabase Storage (bucket 'documentos').
+  -- O binario NUNCA deve ser salvo em colunas TEXT: estoura a cota e quebra a pagina.
+  arquivo_chave  TEXT,
+  arquivo_nome   TEXT,
+  arquivo_tipo   TEXT,
+  arquivo_tamanho BIGINT,
+  pdf_nome       TEXT,
+  status         contrato_status DEFAULT 'rascunho',
+  enviado_em     TEXT DEFAULT '—',
+  assinado_em    TEXT DEFAULT '—',
+  data_criacao   TEXT,
+  created_at     TIMESTAMPTZ DEFAULT now()
 );
 
 -- ------------------------------------------------------------
 -- MATERIAIS
 -- ------------------------------------------------------------
 CREATE TABLE materiais (
-  id        TEXT PRIMARY KEY,
-  cliente   TEXT NOT NULL,
-  titulo    TEXT NOT NULL,
-  tipo      material_tipo,
-  data      TEXT,
-  arquivo   TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
+  id             TEXT PRIMARY KEY,
+  cliente        TEXT NOT NULL,
+  titulo         TEXT NOT NULL,
+  tipo           material_tipo,
+  data           TEXT,
+  arquivo        TEXT,
+  url            TEXT,
+  -- Referencia ao objeto no Supabase Storage (bucket 'documentos').
+  arquivo_chave  TEXT,
+  arquivo_nome   TEXT,
+  arquivo_tipo   TEXT,
+  arquivo_tamanho BIGINT,
+  created_at     TIMESTAMPTZ DEFAULT now()
 );
+
+-- ------------------------------------------------------------
+-- STORAGE: bucket unico para contratos e materiais.
+-- Sem este bucket, nenhum anexo funciona (o upload so tem onde falhar).
+-- ------------------------------------------------------------
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('documentos', 'documentos', false, 104857600)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "documentos_insert" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'documentos');
+
+CREATE POLICY "documentos_select" ON storage.objects
+  FOR SELECT TO authenticated
+  USING (bucket_id = 'documentos');
+
+CREATE POLICY "documentos_update" ON storage.objects
+  FOR UPDATE TO authenticated
+  USING (bucket_id = 'documentos')
+  WITH CHECK (bucket_id = 'documentos');
+
+CREATE POLICY "documentos_delete" ON storage.objects
+  FOR DELETE TO authenticated
+  USING (bucket_id = 'documentos');
 
 -- ------------------------------------------------------------
 -- OVERVIEW (anotacoes por cliente)

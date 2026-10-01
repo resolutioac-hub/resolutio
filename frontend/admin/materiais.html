@@ -109,7 +109,7 @@
       <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
         <p>Arraste arquivos aqui ou clique para selecionar</p>
-        <p style="font-size:0.72rem;margin-top:4px">PDF, imagens, documentos</p>
+        <p style="font-size:0.72rem;margin-top:4px">PDF, imagens, documentos — o arquivo é anexado de verdade e pode ser aberto ou baixado depois</p>
         <input type="file" id="fileInput" multiple onchange="handleUpload(event)">
       </div>
 
@@ -140,12 +140,18 @@
       <div class="form-group"><label>Cliente</label><select class="form-control" id="matCliente"></select></div>
       <div class="form-group"><label>Título</label><input class="form-control" id="matTitulo" placeholder="Nome do material"></div>
       <div class="form-group"><label>Tipo</label><select class="form-control" id="matTipo"><option value="edital">Edital</option><option value="projeto">Projeto</option><option value="material_estudo">Material de estudo</option><option value="outro">Outro</option></select></div>
-      <div class="form-group"><label>Arquivo / Referência</label><input class="form-control" id="matArquivo" placeholder="nome-arquivo.pdf"></div>
+      <div class="form-group">
+        <label for="matFileInput">Anexar arquivo</label>
+        <input class="form-control" type="file" id="matFileInput" onchange="handleMaterialFile(this)">
+        <small style="color:var(--muted);font-size:0.75rem" id="matFileStatus"></small>
+      </div>
+      <div class="form-group"><label>Link externo (opcional)</label><input class="form-control" id="matArquivo" placeholder="https://drive.google.com/..."></div>
     </div>
     <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('newMaterialModal')">Cancelar</button><button class="btn btn--primary" onclick="saveMaterial()">Salvar</button></div>
   </div>
 </div>
 
+<script src="../js/filestore.js"></script>
 <script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/utils.js"></script>
@@ -153,6 +159,22 @@
   requireAuth(['admin']); setupSidebar();
 
   const tipoLabel = { edital: 'Edital', projeto: 'Projeto', material_estudo: 'Material de estudo', outro: 'Outro' };
+  const TIPOS_ACEITOS = ['application/pdf', 'image/*', 'text/*', 'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/zip'];
+
+  function guessTipo(file) {
+    const t = file.type || '';
+    if (t === 'application/pdf') return 'edital';
+    if (t.startsWith('image/')) return 'projeto';
+    if (/word|document/.test(t)) return 'projeto';
+    return 'outro';
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+  }
   const tipoIcon = {
     edital: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
     projeto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
@@ -162,47 +184,67 @@
 
   let allMats = [];
 
-  function handleUpload(event) {
-    const files = Array.from(event.target.files);
-    files.forEach(file => {
-      const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-      if (!db.materiais) db.materiais = [];
-      db.materiais.push({
-        id: 'm' + Date.now() + Math.random().toString(36).slice(2,6),
-        cliente: 'Geral',
-        titulo: file.name,
-        tipo: file.type.includes('pdf') ? 'edital' : 'outro',
-        data: new Date().toISOString().slice(0,10),
-        arquivo: file.name
-      });
-      localStorage.setItem('resolutio_db', JSON.stringify(db));
-    });
-    toast(files.length + ' arquivo(s) adicionado(s)!');
-    loadData();
+  async function handleUpload(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    await processFiles(files);
     event.target.value = '';
+  }
+
+  async function processFiles(files) {
+    let ok = 0;
+    const falhas = [];
+    for (const file of files) {
+      try {
+        await API.materiais.create({
+          cliente: 'Geral',
+          titulo: file.name,
+          tipo: guessTipo(file),
+          _arquivo: file
+        });
+        ok++;
+      } catch (e) {
+        falhas.push(file.name + ': ' + e.message);
+      }
+    }
+    if (ok) toast(ok + ' arquivo(s) anexado(s) com sucesso!', 'success');
+    if (falhas.length) toast('Falha em ' + falhas.length + ' arquivo(s). ' + falhas[0], 'error');
+    loadData();
   }
 
   // Drag and drop
   const zone = document.getElementById('uploadZone');
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
+  zone.addEventListener('dragleave', e => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('dragging'); });
   zone.addEventListener('drop', e => {
     e.preventDefault();
     zone.classList.remove('dragging');
-    const dt = e.dataTransfer;
-    if (dt.files.length) {
-      document.getElementById('fileInput').files = dt.files;
-      handleUpload({ target: { files: dt.files } });
-    }
+    const files = e.dataTransfer && e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
+    if (files.length) processFiles(files);
   });
 
-  function deleteMaterial(id) {
-    if (!confirm('Remover este material?')) return;
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    db.materiais = (db.materiais || []).filter(m => m.id !== id);
-    localStorage.setItem('resolutio_db', JSON.stringify(db));
-    toast('Material removido!');
-    loadData();
+  async function abrirMaterial(id) {
+    try {
+      const url = await API.materiais.abrirArquivo(id);
+      if (!url) return toast('Material sem arquivo anexado.', 'error');
+      const win = window.open(url, '_blank');
+      if (!win) toast('Permita pop-ups no seu navegador para abrir o arquivo.', 'warning');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function baixarMaterial(id) {
+    try {
+      await API.materiais.baixarArquivo(id);
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function deleteMaterial(id) {
+    if (!confirm('Remover este material? O arquivo anexado também será excluído.')) return;
+    try {
+      await API.materiais.remove(id);
+      toast('Material removido!', 'success');
+      loadData();
+    } catch (e) { toast(e.message, 'error'); }
   }
 
   function renderMateriais() {
@@ -227,18 +269,22 @@
     let html = '';
     Object.entries(groups).sort((a,b) => a[0].localeCompare(b[0])).forEach(([cliente, mats]) => {
       html += `<div style="margin-bottom:24px">
-        <div style="font-size:0.70rem;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-left:4px">${cliente} · ${mats.length} arquivo(s)</div>`;
+        <div style="font-size:0.70rem;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-left:4px">${esc(cliente)} · ${mats.length} arquivo(s)</div>`;
       mats.forEach(m => {
+        const temArquivo = API.materiais.temArquivo(m);
+        const tamanho = m.arquivo_tamanho ? ' · ' + FileStore.formatBytes(m.arquivo_tamanho) : '';
         html += `<div class="material-card anim-up">
           <div class="material-icon">${tipoIcon[m.tipo] || tipoIcon.outro}</div>
-          <div style="flex:1">
-            <div class="material-title">${m.titulo}</div>
-            <div class="material-meta">${formatDate(m.data)}</div>
-            <div class="material-tipo">${tipoLabel[m.tipo] || m.tipo}</div>
+          <div style="flex:1;min-width:0">
+            <div class="material-title">${esc(m.titulo)}</div>
+            <div class="material-meta">${formatDate(m.data)}${tamanho}</div>
+            <div class="material-tipo">${tipoLabel[m.tipo] || esc(m.tipo)}</div>
           </div>
           <div class="material-actions">
-            <span style="font-size:0.72rem;color:var(--muted)">${m.arquivo}</span>
-            <button class="action-btn action-btn--danger" onclick="deleteMaterial('${m.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            <span style="font-size:0.72rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.arquivo_nome || m.arquivo || m.url || 'sem-arquivo')}</span>
+            ${temArquivo ? `<button class="action-btn action-btn--primary" onclick="abrirMaterial('${m.id}')">Abrir</button>
+            <button class="action-btn action-btn--primary" onclick="baixarMaterial('${m.id}')">⬇</button>` : ''}
+            <button class="action-btn action-btn--danger" onclick="deleteMaterial('${m.id}')" aria-label="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
           </div>
         </div>`;
       });
@@ -261,26 +307,54 @@
     sel.innerHTML = '<option value="">Todos os clientes</option>' + clientes.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('') + '<option value="Geral">Geral</option>';
   }
 
-  function saveMaterial() {
+  async function saveMaterial() {
     const cliente = document.getElementById('matCliente').value;
     const titulo = document.getElementById('matTitulo').value.trim();
     const tipo = document.getElementById('matTipo').value;
-    const arquivo = document.getElementById('matArquivo').value.trim() || 'sem-arquivo';
-    if (!titulo) return toast('Informe o título', 'error');
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    if (!db.materiais) db.materiais = [];
-    db.materiais.push({
-      id: 'm' + Date.now(),
-      cliente,
-      titulo,
-      tipo,
-      data: new Date().toISOString().slice(0,10),
-      arquivo
-    });
-    localStorage.setItem('resolutio_db', JSON.stringify(db));
-    closeModal('newMaterialModal');
-    toast('Material adicionado!');
-    loadData();
+    const referencia = document.getElementById('matArquivo').value.trim();
+    const file = document.getElementById('matFileInput').files[0] || null;
+
+    if (!titulo && !file) return toast('Informe o título ou selecione um arquivo.', 'error');
+    if (!cliente) return toast('Selecione um cliente.', 'error');
+
+    // Referencia solta no campo de texto so vale como link externo.
+    const url = /^(https?:)?\/\//i.test(referencia) ? referencia : '';
+
+    try {
+      await API.materiais.create({
+        cliente,
+        titulo: titulo || (file ? file.name : ''),
+        tipo,
+        url,
+        _arquivo: file || undefined
+      });
+      closeModal('newMaterialModal');
+      document.getElementById('matTitulo').value = '';
+      document.getElementById('matArquivo').value = '';
+      document.getElementById('matFileInput').value = '';
+      document.getElementById('matFileStatus').textContent = '';
+      toast('Material adicionado!', 'success');
+      loadData();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  function handleMaterialFile(input) {
+    const file = input.files[0];
+    const status = document.getElementById('matFileStatus');
+    if (!file) { status.textContent = ''; return; }
+    try {
+      FileStore.validar(file);
+      status.innerHTML = `<strong style="color:var(--success)">✓ ${esc(file.name)} (${FileStore.formatBytes(file.size)})</strong>`;
+      if (!document.getElementById('matTitulo').value.trim()) {
+        document.getElementById('matTitulo').value = file.name.replace(/\.[^.]+$/, '');
+      }
+    } catch (e) {
+      toast(e.message, 'error');
+      input.value = '';
+      status.textContent = '';
+    }
   }
 
   async function loadData() {

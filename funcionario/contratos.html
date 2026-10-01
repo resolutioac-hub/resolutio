@@ -105,8 +105,9 @@
       <!-- Importar PDF -->
       <div class="upload-box">
         <label for="contractPdfFile" style="font-weight:700;color:var(--primary);display:block;margin-bottom:6px">📄 Selecionar Arquivo do Contrato (PDF)</label>
-        <input type="file" id="contractPdfFile" class="form-control" accept="application/pdf" onchange="handlePdfUpload(this)">
+        <input type="file" id="contractPdfFile" class="form-control" accept="application/pdf,.pdf" onchange="handlePdfUpload(this)">
         <div id="pdfUploadStatus" style="font-size:0.78rem;color:var(--muted);margin-top:6px">Nenhum arquivo PDF selecionado.</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:4px">O arquivo é anexado de verdade ao contrato e pode ser aberto ou baixado depois. Limite: 100 MB por arquivo.</div>
       </div>
 
       <div class="form-group" style="margin-top:14px">
@@ -121,6 +122,7 @@
   </div>
 </div>
 
+<script src="../js/filestore.js"></script>
 <script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/utils.js"></script>
@@ -130,7 +132,7 @@
 
   let allContratos = [];
   let allClientes = [];
-  let uploadedPdfData = null;
+  let uploadedPdfFile = null;
   let uploadedPdfName = null;
 
   function openModal(id) { document.getElementById(id)?.classList.add('open'); }
@@ -146,29 +148,54 @@
     renderContratos();
   }
 
-  function handlePdfUpload(input) {
-    const file = input.files[0];
+  function resetPdfSelection() {
+    uploadedPdfFile = null;
+    uploadedPdfName = null;
+    const input = document.getElementById('contractPdfFile');
+    if (input) input.value = '';
     const status = document.getElementById('pdfUploadStatus');
-    if (!file) {
-      uploadedPdfData = null;
-      uploadedPdfName = null;
+    if (status) {
       status.textContent = 'Nenhum arquivo PDF selecionado.';
-      return;
+      status.style.color = '';
     }
+  }
 
-    if (file.type !== 'application/pdf') {
-      toast('Por favor, selecione um arquivo em formato PDF.', 'error');
+  function handlePdfUpload(input) {
+    const status = document.getElementById('pdfUploadStatus');
+    const file = input.files[0];
+    if (!file) { resetPdfSelection(); return; }
+
+    // O navegador nem sempre preenche file.type em PDFs; o nome e a assinatura %PDF sao o fallback.
+    const parecePdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name) || file.type === '';
+    if (!parecePdf) {
+      toast('Selecione um arquivo em formato PDF.', 'error');
       input.value = '';
+      uploadedPdfFile = null;
+      uploadedPdfName = null;
+      return;
+    }
+    if (file.size === 0) {
+      toast('O arquivo selecionado está vazio.', 'error');
+      input.value = '';
+      uploadedPdfFile = null;
+      uploadedPdfName = null;
+      return;
+    }
+    if (file.size > FileStore.MAX_FILE_BYTES) {
+      toast(`Arquivo muito grande (${FileStore.formatBytes(file.size)}). Limite: ${FileStore.formatBytes(FileStore.MAX_FILE_BYTES)}.`, 'error');
+      input.value = '';
+      uploadedPdfFile = null;
+      uploadedPdfName = null;
       return;
     }
 
+    uploadedPdfFile = file;
     uploadedPdfName = file.name;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      uploadedPdfData = e.target.result;
-      status.innerHTML = `<strong style="color:#10b981">✓ Arquivo carregado: ${file.name} (${(file.size/1024).toFixed(1)} KB)</strong>`;
-    };
-    reader.readAsDataURL(file);
+    status.innerHTML = `<strong style="color:#10b981">✓ PDF pronto para anexar: ${file.name} (${FileStore.formatBytes(file.size)})</strong>`;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
   }
 
   function renderContratos() {
@@ -183,6 +210,7 @@
       const isSent = c.status === 'enviado';
       const badgeClass = isSigned ? 'badge--success' : isSent ? 'badge--warning' : 'badge--info';
       const badgeText = isSigned ? 'Assinado' : isSent ? 'Aguardando Assinatura' : 'PDF Importado / Rascunho';
+      const temPdf = API.contratos.temArquivo(c);
 
       const client = allClientes.find(cl => cl.nome === c.cliente);
       const phone = client?.whatsapp || client?.telefone || '';
@@ -199,7 +227,7 @@
             Cliente: <strong>${c.cliente}</strong> · Valor: R$ ${(c.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}
           </div>
           <div style="font-size:0.75rem;color:var(--primary);font-weight:600;margin-top:4px">
-            📄 PDF: ${c.pdf_nome || 'Contrato-Mentoria.pdf'} ${c.pdf_data ? ' (Pronto para abertura)' : ''}
+            📄 PDF: ${esc(c.pdf_nome || c.arquivo_nome || 'Contrato-Mentoria.pdf')} ${temPdf ? ' (Pronto para abertura)' : ' (sem arquivo anexado)'}
           </div>
           <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">
             Criado em: ${formatDate(c.data_criacao || new Date().toISOString())}
@@ -209,7 +237,8 @@
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="badge ${badgeClass}">${badgeText}</span>
 
-          ${c.pdf_data ? `<button class="btn btn--ghost btn--sm" onclick="openPdfData('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Ver PDF</button>` : ''}
+          ${temPdf ? `<button class="btn btn--ghost btn--sm" onclick="openPdfData('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Ver PDF</button>
+          <button class="btn btn--ghost btn--sm" onclick="downloadPdf('${c.id}')">⬇ Baixar</button>` : ''}
 
           ${cleanPhone && !isSigned ? `<a href="${whatsUrl}" target="_blank" onclick="markSent('${c.id}')" class="btn btn--ghost btn--sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;margin-right:4px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Enviar WhatsApp</a>` : ''}
 
@@ -219,16 +248,24 @@
     }).join('');
   }
 
-  function openPdfData(id) {
-    const c = allContratos.find(x => x.id === id);
-    if (!c || !c.pdf_data) return toast('Arquivo PDF não disponível.', 'error');
-    
-    // Abrir o PDF em DataURL em nova aba
-    const win = window.open();
-    if (win) {
-      win.document.write(`<iframe src="${c.pdf_data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-    } else {
-      toast('Permita pop-ups no seu navegador para visualizar o PDF.', 'warning');
+  async function openPdfData(id) {
+    try {
+      // Blob URL do IndexedDB: abre no visualizador nativo do navegador.
+      // Data URLs em iframe sao bloqueados pelo Chrome em contexto de topo.
+      const url = await API.contratos.abrirArquivo(id);
+      if (!url) return toast('Arquivo PDF não disponível.', 'error');
+      const win = window.open(url, '_blank');
+      if (!win) toast('Permita pop-ups no seu navegador para visualizar o PDF.', 'warning');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function downloadPdf(id) {
+    try {
+      await API.contratos.baixarArquivo(id);
+    } catch (e) {
+      toast(e.message, 'error');
     }
   }
 
@@ -240,6 +277,9 @@
 
     if (!cliente) return toast('Selecione um cliente.', 'error');
 
+    // Capturado antes do reset: resetPdfSelection() zera uploadedPdfFile.
+    const tinhaArquivo = Boolean(uploadedPdfFile);
+
     try {
       await API.contratos.create({
         cliente,
@@ -247,18 +287,16 @@
         valor,
         observacoes,
         pdf_nome: uploadedPdfName || `${cliente.replace(/\s+/g,'_')}_Contrato.pdf`,
-        pdf_data: uploadedPdfData || null,
         status: 'rascunho',
-        data_criacao: new Date().toISOString()
+        data_criacao: new Date().toISOString(),
+        _arquivo: uploadedPdfFile || undefined
       });
 
       closeModal('newContractModal');
-      uploadedPdfData = null;
-      uploadedPdfName = null;
-      document.getElementById('contractPdfFile').value = '';
-      document.getElementById('pdfUploadStatus').textContent = 'Nenhum arquivo PDF selecionado.';
+      resetPdfSelection();
+      document.getElementById('contractClausulas').value = '';
 
-      toast('Contrato PDF importado com sucesso!', 'success');
+      toast(tinhaArquivo ? 'Contrato PDF importado com sucesso!' : 'Contrato criado. Nenhum PDF foi anexado.', tinhaArquivo ? 'success' : 'warning');
       load();
     } catch (e) { toast(e.message, 'error'); }
   }
@@ -267,7 +305,7 @@
     try {
       await API.contratos.update(id, { status: 'enviado', enviado_em: new Date().toISOString() });
       load();
-    } catch (e) {}
+    } catch (e) { toast(e.message, 'error'); }
   }
 
   async function markSigned(id) {

@@ -123,7 +123,7 @@
       <div class="form-group"><label>Valor (R$)</label><input class="form-control" type="number" id="ctValor" placeholder="0,00"></div>
       <div class="form-group">
         <label>Importar Contrato em PDF</label>
-        <input class="form-control" type="file" id="ctPdfFile" accept="application/pdf" onchange="handleAdminPdfUpload(this)">
+        <input class="form-control" type="file" id="ctPdfFile" accept="application/pdf,.pdf" onchange="handleAdminPdfUpload(this)">
         <small style="color:var(--muted);font-size:0.75rem" id="adminPdfStatus">Selecione o arquivo PDF para o cliente assinar</small>
       </div>
       <div class="form-group"><label>Referência / Observações</label><input class="form-control" id="ctArquivo" placeholder="Contrato-Mentoria.pdf"></div>
@@ -132,28 +132,47 @@
   </div>
 </div>
 
+<script src="../js/filestore.js"></script>
 <script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/utils.js"></script>
 <script>
   requireAuth(['admin']); setupSidebar();
 
-  let adminPdfData = null;
+  let adminPdfFile = null;
   let adminPdfName = null;
 
-  function handleAdminPdfUpload(input) {
-    const file = input.files[0];
+  function resetAdminPdf() {
+    adminPdfFile = null;
+    adminPdfName = null;
+    const input = document.getElementById('ctPdfFile');
+    if (input) input.value = '';
     const status = document.getElementById('adminPdfStatus');
-    if (!file) { adminPdfData = null; adminPdfName = null; status.textContent = 'Selecione o arquivo PDF'; return; }
-    if (file.type !== 'application/pdf') { toast('Por favor selecione um PDF.', 'error'); input.value = ''; return; }
+    if (status) {
+      status.textContent = 'Selecione o arquivo PDF para o cliente assinar';
+      status.style.color = '';
+    }
+  }
+
+  function handleAdminPdfUpload(input) {
+    const status = document.getElementById('adminPdfStatus');
+    const file = input.files[0];
+    if (!file) { resetAdminPdf(); return; }
+    const parecePdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name) || file.type === '';
+    if (!parecePdf) { toast('Por favor selecione um PDF.', 'error'); input.value = ''; adminPdfFile = null; adminPdfName = null; return; }
+    if (file.size === 0) { toast('O arquivo selecionado está vazio.', 'error'); input.value = ''; adminPdfFile = null; adminPdfName = null; return; }
+    if (file.size > FileStore.MAX_FILE_BYTES) {
+      toast(`Arquivo muito grande (${FileStore.formatBytes(file.size)}). Limite: ${FileStore.formatBytes(FileStore.MAX_FILE_BYTES)}.`, 'error');
+      input.value = ''; adminPdfFile = null; adminPdfName = null; return;
+    }
+    adminPdfFile = file;
     adminPdfName = file.name;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      adminPdfData = e.target.result;
-      status.innerHTML = `<strong style="color:var(--success)">✓ PDF Carregado: ${file.name}</strong>`;
-      document.getElementById('ctArquivo').value = file.name;
-    };
-    reader.readAsDataURL(file);
+    status.innerHTML = `<strong style="color:var(--success)">✓ PDF pronto para anexar: ${file.name} (${FileStore.formatBytes(file.size)})</strong>`;
+    document.getElementById('ctArquivo').value = file.name;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
   }
 
   async function loadContratos(){
@@ -177,8 +196,9 @@
       }
 
       let actions = '';
-      if (c.pdf_data) {
-        actions += `<button class="action-btn action-btn--primary" onclick="openPdfDataAdmin('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Ver PDF</button> `;
+      if (API.contratos.temArquivo(c)) {
+        actions += `<button class="action-btn action-btn--primary" onclick="openPdfDataAdmin('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Ver PDF</button>
+        <button class="action-btn action-btn--primary" onclick="downloadPdfAdmin('${c.id}')">Baixar</button> `;
       }
       if (c.status === 'rascunho') {
         actions += `<button class="action-btn action-btn--primary" onclick="sendContract('${c.id}')">Enviar</button>`;
@@ -205,26 +225,39 @@
     });
   }
 
-  function openPdfDataAdmin(id) {
-    API.contratos.list().then(cts => {
-      const c = cts.find(x => x.id === id);
-      if (c && c.pdf_data) {
-        const win = window.open();
-        win?.document.write(`<iframe src="${c.pdf_data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-      }
-    });
+  async function openPdfDataAdmin(id) {
+    try {
+      const url = await API.contratos.abrirArquivo(id);
+      if (!url) return toast('Arquivo PDF não disponível.', 'error');
+      const win = window.open(url, '_blank');
+      if (!win) toast('Permita pop-ups no seu navegador para visualizar o PDF.', 'warning');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function downloadPdfAdmin(id) {
+    try {
+      await API.contratos.baixarArquivo(id);
+    } catch (e) {
+      toast(e.message, 'error');
+    }
   }
 
   async function sendContract(id) {
-    await API.contratos.update(id, { status: 'enviado', enviado_em: new Date().toISOString().slice(0,10) });
-    toast('Contrato enviado para assinatura!');
-    loadContratos();
+    try {
+      await API.contratos.update(id, { status: 'enviado', enviado_em: new Date().toISOString().slice(0,10) });
+      toast('Contrato enviado para assinatura!');
+      loadContratos();
+    } catch (e) { toast(e.message, 'error'); }
   }
 
   async function signContract(id) {
-    await API.contratos.update(id, { status: 'assinado', assinado_em: new Date().toISOString().slice(0,10) });
-    toast('Assinatura confirmada!');
-    loadContratos();
+    try {
+      await API.contratos.update(id, { status: 'assinado', assinado_em: new Date().toISOString().slice(0,10) });
+      toast('Assinatura confirmada!');
+      loadContratos();
+    } catch (e) { toast(e.message, 'error'); }
   }
 
   async function remindContract(id, cliente) {
@@ -239,14 +272,28 @@
 
   async function saveContract() {
     const cliente = document.getElementById('ctCliente').value;
-    const valor = parseFloat(document.getElementById('ctValor').value) || 0;
+    const valorInput = document.getElementById('ctValor').value.trim();
+    const valor = valorInput === '' ? 0 : parseFloat(valorInput);
     const arquivo = document.getElementById('ctArquivo').value.trim() || adminPdfName || 'Contrato.pdf';
-    if (!cliente || !valor) return toast('Preencha cliente e valor', 'error');
-    await API.contratos.create({ cliente, valor, arquivo, pdf_nome: adminPdfName || arquivo, pdf_data: adminPdfData });
-    closeModal('newContractModal');
-    adminPdfData = null; adminPdfName = null;
-    toast('Contrato em PDF importado com sucesso!');
-    loadContratos();
+    if (!cliente) return toast('Selecione o cliente.', 'error');
+    if (Number.isNaN(valor)) return toast('Informe um valor válido.', 'error');
+    // Capturado antes do reset: resetAdminPdf() zera adminPdfFile.
+    const tinhaArquivo = Boolean(adminPdfFile);
+    try {
+      await API.contratos.create({
+        cliente,
+        valor,
+        arquivo,
+        pdf_nome: adminPdfName || arquivo,
+        _arquivo: adminPdfFile || undefined
+      });
+      closeModal('newContractModal');
+      document.getElementById('ctValor').value = '';
+      document.getElementById('ctArquivo').value = '';
+      resetAdminPdf();
+      toast(tinhaArquivo ? 'Contrato em PDF importado com sucesso!' : 'Contrato criado. Nenhum PDF foi anexado.', tinhaArquivo ? 'success' : 'warning');
+      loadContratos();
+    } catch (e) { toast(e.message, 'error'); }
   }
 
   loadClientesForContract();

@@ -85,6 +85,7 @@
   </div>
 </div>
 
+<script src="../js/filestore.js"></script>
 <script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/utils.js"></script>
@@ -92,6 +93,25 @@
   requireAuth(['cliente']); setupSidebar();
 
   const tipoLabel = { edital: 'Edital', projeto: 'Projeto', material_estudo: 'Material de estudo', outro: 'Outro' };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+  }
+
+  async function abrirMaterial(id) {
+    try {
+      const url = await API.materiais.abrirArquivo(id);
+      if (!url) return toast('Material sem arquivo anexado.', 'error');
+      const win = window.open(url, '_blank');
+      if (!win) toast('Permita pop-ups no seu navegador para abrir o documento.', 'warning');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function baixarMaterial(id) {
+    try {
+      await API.materiais.baixarArquivo(id);
+    } catch (e) { toast(e.message, 'error'); }
+  }
 
   async function load() {
     const user = getSession().user;
@@ -105,15 +125,21 @@
       return;
     }
 
-    document.getElementById('materiaisList').innerHTML = meusMateriais.map(m => `
+    document.getElementById('materiaisList').innerHTML = meusMateriais.map(m => {
+      const temArquivo = API.materiais.temArquivo(m);
+      const tamanho = m.arquivo_tamanho ? ' · ' + FileStore.formatBytes(m.arquivo_tamanho) : '';
+      return `
       <div class="material-card">
         <div class="material-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:0.90rem;color:var(--ink)">${m.titulo}</div>
-          <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${formatDate(m.data)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:0.90rem;color:var(--ink)">${esc(m.titulo)}</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${formatDate(m.data)}${tamanho}</div>
         </div>
-        <span class="badge badge--primary">${tipoLabel[m.tipo] || m.tipo}</span>
-      </div>`).join('');
+        <span class="badge badge--primary">${tipoLabel[m.tipo] || esc(m.tipo)}</span>
+        ${temArquivo ? `<button class="btn btn--primary btn--sm" onclick="abrirMaterial('${m.id}')">Abrir</button>
+        <button class="btn btn--ghost btn--sm" onclick="baixarMaterial('${m.id}')">⬇</button>` : '<span style="font-size:0.72rem;color:var(--muted)">Sem arquivo</span>'}
+      </div>`;
+    }).join('');
   }
   load();
 

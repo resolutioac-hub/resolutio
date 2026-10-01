@@ -38,7 +38,94 @@ function getDB() {
     return db;
   } catch { return seedDB(); }
 }
-function saveDB(db) { localStorage.setItem('resolutio_db', JSON.stringify(db)); }
+function saveDB(db) {
+  try {
+    localStorage.setItem('resolutio_db', JSON.stringify(db));
+  } catch (e) {
+    // localStorage e ~5 MB por origem. Binarios NAO devem chegar aqui (use FileStore),
+    // mas se chegarem a falha precisa ser legivel, nao um QuotaExceededError mudo.
+    if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014)) {
+      throw new Error('Armazenamento do navegador cheio. Exclua documentos antigos ou reduza o tamanho dos arquivos.');
+    }
+    throw new Error('Nao foi possivel salvar os dados no navegador.');
+  }
+}
+
+// ---------- Helpers de arquivo (IndexedDB) ----------
+function gerarChaveArquivo(prefixo, id) {
+  return prefixo + ':' + id + ':' + Date.now() + ':' + Math.random().toString(36).slice(2, 8);
+}
+function ehArquivo(v) {
+  return typeof File !== 'undefined' ? v instanceof File : (v instanceof Blob);
+}
+function exigirFileStore() {
+  if (!window.FileStore) {
+    throw new Error('js/filestore.js nao foi carregado. O anexo de documentos depende desse arquivo.');
+  }
+  return window.FileStore;
+}
+async function salvarArquivo(prefixo, id, file) {
+  const chave = gerarChaveArquivo(prefixo, id);
+  const meta = await exigirFileStore().put(chave, file);
+  return {
+    arquivo_chave: meta.chave,
+    arquivo_nome: meta.nome,
+    arquivo_tipo: meta.tipo,
+    arquivo_tamanho: meta.tamanho,
+    arquivo: meta.nome
+  };
+}
+
+// Converte registros antigos que guardavam o PDF como base64 (data URL) em localStorage
+// para o armazenamento de arquivos (IndexedDB), preservando o documento ja cadastrado.
+async function migrarArquivosBase64(registros, campoLegado = 'pdf_data') {
+  if (!window.FileStore) return registros;
+  for (const reg of registros) {
+    const legado = reg[campoLegado];
+    if (!legado || typeof legado !== 'string' || !legado.startsWith('data:')) continue;
+    try {
+      const blob = window.FileStore.dataUrlParaBlob(legado);
+      if (!blob) throw new Error('data URL invalida');
+      const chave = gerarChaveArquivo('contrato', reg.id);
+      const meta = await window.FileStore.put(chave, blob, { nome: reg.pdf_nome || reg.arquivo || 'documento.pdf' });
+      reg.arquivo_chave = meta.chave;
+      reg.arquivo_nome = meta.nome;
+      reg.arquivo_tipo = meta.tipo;
+      reg.arquivo_tamanho = meta.tamanho;
+      reg.arquivo = meta.nome;
+      reg.pdf_nome = meta.nome;
+      reg.pdf_chave = meta.chave;
+      delete reg[campoLegado];
+    } catch (e) {
+      console.warn('Nao foi possivel migrar o arquivo legado do registro', reg.id, e);
+    }
+  }
+  return registros;
+}
+
+async function abrirArquivo(registro, nomeAlternativo) {
+  if (!registro) return null;
+  // Contratos gravados antes do IndexedDB podem ter apenas pdf_chave.
+  const chave = registro.arquivo_chave || registro.pdf_chave;
+  if (chave) return exigirFileStore().url(chave);
+  // Fallback: documento legado ainda em base64.
+  const legado = registro.pdf_data;
+  if (typeof legado === 'string' && legado.startsWith('data:')) return legado;
+  const externo = registro.url || (nomeAlternativo && /^(https?:)?\/\//.test(nomeAlternativo) ? nomeAlternativo : '');
+  return externo || null;
+}
+
+async function baixarArquivo(registro, nomeAlternativo) {
+  const url = await abrirArquivo(registro, nomeAlternativo);
+  if (!url) throw new Error('Este registro nao possui arquivo anexado.');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (registro.arquivo_nome || registro.pdf_nome || registro.arquivo || nomeAlternativo || 'documento');
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  return url;
+}
 
 const API = {
   // Leads
@@ -170,30 +257,144 @@ const API = {
     }
   },
   contratos: {
-    list(){ return Promise.resolve(getDB().contratos || []); },
-    create(data) {
+    async list() {
       const db = getDB();
-      if(!db.contratos) db.contratos = [];
-      const contrato = { id: 'ct'+Date.now(), status:'rascunho', enviado_em:'—', assinado_em:'—', arquivo:'—', ...data };
-      db.contratos.push(contrato); saveDB(db); return Promise.resolve(contrato);
+      db.contratos = db.contratos || [];
+      const temLegado = db.contratos.some(c => typeof c.pdf_data === 'string' && c.pdf_data.startsWith('data:'));
+      if (temLegado && window.FileStore) {
+        await migrarArquivosBase64(db.contratos);
+        saveDB(db);
+      }
+      return db.contratos;
     },
-    update(id, patch) {
+    async create(data) {
       const db = getDB();
-      const idx = (db.contratos||[]).findIndex(c=>c.id===id);
-      if(idx>=0){ db.contratos[idx]={...db.contratos[idx], ...patch}; saveDB(db); }
-      return Promise.resolve(db.contratos?.[idx]);
+      if (!db.contratos) db.contratos = [];
+      const { _arquivo, ...resto } = data || {};
+      const contrato = {
+        id: 'ct' + Date.now() + Math.random().toString(36).slice(2, 5),
+        status: 'rascunho', enviado_em: '—', assinado_em: '—',
+        data_criacao: new Date().toISOString(),
+        ...resto
+      };
+
+      if (ehArquivo(_arquivo)) {
+        Object.assign(contrato, await salvarArquivo('contrato', contrato.id, _arquivo));
+        contrato.pdf_nome = contrato.arquivo_nome;
+        contrato.pdf_chave = contrato.arquivo_chave;
+      } else if (contrato.pdf_nome && !contrato.arquivo) {
+        contrato.arquivo = contrato.pdf_nome;
+      }
+
+      db.contratos.push(contrato);
+      saveDB(db);
+      return contrato;
+    },
+    async update(id, patch) {
+      const db = getDB();
+      db.contratos = db.contratos || [];
+      const idx = db.contratos.findIndex(c => c.id === id);
+      if (idx < 0) return Promise.reject(new Error('Contrato nao encontrado.'));
+      const { _arquivo, ...resto } = patch || {};
+      if (ehArquivo(_arquivo)) {
+        const anterior = db.contratos[idx].arquivo_chave;
+        Object.assign(db.contratos[idx], await salvarArquivo('contrato', id, _arquivo));
+        db.contratos[idx].pdf_nome = db.contratos[idx].arquivo_nome;
+        db.contratos[idx].pdf_chave = db.contratos[idx].arquivo_chave;
+        if (anterior) exigirFileStore().delete(anterior).catch(() => {});
+      }
+      db.contratos[idx] = { ...db.contratos[idx], ...resto };
+      saveDB(db);
+      return db.contratos[idx];
+    },
+    async get(id) {
+      const list = await this.list();
+      return list.find(c => c.id === id);
+    },
+    temArquivo(c) {
+      if (!c) return false;
+      return !!(c.arquivo_chave || c.pdf_chave || (typeof c.pdf_data === 'string' && c.pdf_data.startsWith('data:')));
+    },
+    async abrirArquivo(id) {
+      const c = await this.get(id);
+      if (!this.temArquivo(c)) throw new Error('Contrato sem PDF anexado.');
+      return abrirArquivo(c, c.pdf_nome || c.arquivo);
+    },
+    async baixarArquivo(id) {
+      const c = await this.get(id);
+      return baixarArquivo(c, c.pdf_nome || c.arquivo);
+    },
+    async remove(id) {
+      const db = getDB();
+      db.contratos = db.contratos || [];
+      const alvo = db.contratos.find(c => c.id === id);
+      if (alvo && alvo.arquivo_chave && window.FileStore) window.FileStore.delete(alvo.arquivo_chave).catch(() => {});
+      db.contratos = db.contratos.filter(c => c.id !== id);
+      saveDB(db);
+      return true;
     }
   },
   materiais: {
     list(){ return Promise.resolve(getDB().materiais || []); },
-    create(data) {
+    async create(data) {
       const db = getDB();
-      if(!db.materiais) db.materiais = [];
-      const material = { id: 'm'+Date.now(), ...data };
-      db.materiais.push(material); saveDB(db); return Promise.resolve(material);
+      if (!db.materiais) db.materiais = [];
+      const { _arquivo, ...resto } = data || {};
+      const material = {
+        id: 'm' + Date.now() + Math.random().toString(36).slice(2, 5),
+        data: new Date().toISOString().slice(0, 10),
+        ...resto
+      };
+      if (ehArquivo(_arquivo)) {
+        Object.assign(material, await salvarArquivo('material', material.id, _arquivo));
+        material.arquivo = material.arquivo_nome;
+        if (!material.titulo) material.titulo = material.arquivo_nome;
+      } else if (!material.arquivo && !material.url) {
+        material.arquivo = 'sem-arquivo';
+      }
+      db.materiais.push(material);
+      saveDB(db);
+      return material;
     },
-    remove(id) {
-      const db=getDB(); db.materiais=(db.materiais||[]).filter(m=>m.id!==id); saveDB(db); return Promise.resolve(true);
+    async update(id, patch) {
+      const db = getDB();
+      db.materiais = db.materiais || [];
+      const idx = db.materiais.findIndex(m => m.id === id);
+      if (idx < 0) return Promise.reject(new Error('Material nao encontrado.'));
+      const { _arquivo, ...resto } = patch || {};
+      if (ehArquivo(_arquivo)) {
+        const anterior = db.materiais[idx].arquivo_chave;
+        Object.assign(db.materiais[idx], await salvarArquivo('material', id, _arquivo));
+        db.materiais[idx].arquivo = db.materiais[idx].arquivo_nome;
+        if (anterior) exigirFileStore().delete(anterior).catch(() => {});
+      }
+      db.materiais[idx] = { ...db.materiais[idx], ...resto };
+      saveDB(db);
+      return db.materiais[idx];
+    },
+    temArquivo(m) {
+      if (!m) return false;
+      return !!(m.arquivo_chave || m.url);
+    },
+    async abrirArquivo(id) {
+      const m = (getDB().materiais || []).find(x => x.id === id);
+      const url = await abrirArquivo(m, m && m.arquivo);
+      if (!url) throw new Error('Material sem arquivo anexado.');
+      return url;
+    },
+    async baixarArquivo(id) {
+      const m = (getDB().materiais || []).find(x => x.id === id);
+      if (!m) throw new Error('Material nao encontrado.');
+      return baixarArquivo(m, m.arquivo);
+    },
+    async remove(id) {
+      const db = getDB();
+      db.materiais = db.materiais || [];
+      const alvo = db.materiais.find(m => m.id === id);
+      if (alvo && alvo.arquivo_chave && window.FileStore) window.FileStore.delete(alvo.arquivo_chave).catch(() => {});
+      db.materiais = db.materiais.filter(m => m.id !== id);
+      saveDB(db);
+      return true;
     }
   },
   encontros: {
