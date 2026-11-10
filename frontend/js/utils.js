@@ -9,7 +9,7 @@ function formatDateTime(d){
 }
 const PILARES = ['Mapeamento', 'Arquitetura', 'Banca', 'Aprovação'];
 function clientePilar(cliente) {
-  const n = Number(cliente?.pilar_atual);
+  const n = Number(cliente?.pilar_atual ?? cliente?.pilar);
   return (n >= 1 && n <= 4) ? Math.round(n) : 1;
 }
 function pilarLabel(n) { return 'Pilar ' + n + ' — ' + (PILARES[n - 1] || ''); }

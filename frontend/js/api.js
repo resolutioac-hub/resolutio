@@ -160,8 +160,55 @@ const API = {
       const db = getDB();
       const idx = db.clientes.findIndex(c=>c.id===id);
       if (idx < 0) return Promise.reject(new Error('Cliente não encontrado.'));
-      db.clientes[idx] = { ...db.clientes[idx], ...patch };
-      saveDB(db); return Promise.resolve(db.clientes[idx]);
+      const anterior = db.clientes[idx];
+      db.clientes[idx] = { ...anterior, ...patch };
+      saveDB(db);
+      // Se o e-mail mudou, move a senha para a nova chave para o cliente nao perder o acesso.
+      const emailAntigo = String(anterior.email || '').toLowerCase();
+      const emailNovo = String(db.clientes[idx].email || '').toLowerCase();
+      if (emailAntigo && emailNovo && emailAntigo !== emailNovo) {
+        const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
+        if (Object.prototype.hasOwnProperty.call(passwords, emailAntigo)) {
+          passwords[emailNovo] = passwords[emailAntigo];
+          delete passwords[emailAntigo];
+          localStorage.setItem('resolutio_passwords', JSON.stringify(passwords));
+        }
+      }
+      return Promise.resolve(db.clientes[idx]);
+    },
+    remove(id, nome) {
+      const db = getDB();
+      const clientes = db.clientes || [];
+      const alvo = clientes.find(c => c.id === id || (nome && c.nome === nome));
+      if (!alvo) return Promise.reject(new Error('Cliente não encontrado.'));
+      const nomeRef = alvo.nome;
+      const emailRef = String(alvo.email || '').toLowerCase();
+
+      // Remove arquivos anexados antes de apagar os registros vinculados.
+      const temArquivo = r => r && r.arquivo_chave;
+      if (window.FileStore) {
+        (db.contratos || []).filter(c => c.cliente === nomeRef && temArquivo(c)).forEach(c => window.FileStore.delete(c.arquivo_chave).catch(() => {}));
+        (db.materiais || []).filter(m => m.cliente === nomeRef && temArquivo(m)).forEach(m => window.FileStore.delete(m.arquivo_chave).catch(() => {}));
+      }
+
+      db.clientes = clientes.filter(c => c !== alvo);
+      ['encontros', 'pagamentos', 'contratos', 'materiais'].forEach(tabela => {
+        if (!Array.isArray(db[tabela])) return;
+        db[tabela] = db[tabela].filter(r => r.cliente !== nomeRef && (!emailRef || String(r.cliente || '').toLowerCase() !== emailRef));
+      });
+      saveDB(db);
+
+      // Remove senha, anotacoes e lembretes vinculados.
+      const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
+      if (emailRef) delete passwords[emailRef];
+      const cpfDigits = String(alvo.cpf || '').replace(/\D/g, '');
+      if (cpfDigits) delete passwords['cpf:' + cpfDigits];
+      localStorage.setItem('resolutio_passwords', JSON.stringify(passwords));
+      localStorage.removeItem('overview_' + nomeRef);
+      const reminders = JSON.parse(localStorage.getItem('resolutio_reminders') || '[]').filter(r => r.cliente !== nomeRef);
+      localStorage.setItem('resolutio_reminders', JSON.stringify(reminders));
+
+      return Promise.resolve(true);
     }
   },
   funcionarios: {

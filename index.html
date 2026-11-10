@@ -271,10 +271,10 @@
           <button type="button" class="login-type-btn login-type-btn--inactive" id="btnEmail" onclick="setLoginType('email')"><i class="fas fa-envelope"></i> E-mail</button>
         </div>
         <div class="form-group">
-          <label for="email" id="loginLabel">CPF</label>
+          <label for="email" id="loginLabel">CPF ou e-mail</label>
           <div class="input-icon-wrapper">
             <i class="fas fa-id-card input-icon" id="loginIcon"></i>
-            <input type="text" class="form-control" id="email" placeholder="000.000.000-00" required oninput="maskCPF(this)">
+            <input type="text" class="form-control" id="email" placeholder="000.000.000-00 ou seu@email.com" required oninput="maskCPF(this)">
           </div>
         </div>
         <div class="form-group">
@@ -328,6 +328,8 @@
   let loginType='cpf';
   function maskCPF(input){
     if(loginType!=='cpf') return;
+    // Permite digitar e-mail mesmo quando a aba selecionada e CPF.
+    if(/[a-zA-Z@]/.test(input.value)) return;
     const pos=input.selectionStart;
     const oldLen=input.value.length;
     input.value=formatCPF(input.value);
@@ -342,8 +344,8 @@
     const btnCpf=document.getElementById('btnCpf');
     const btnEmail=document.getElementById('btnEmail');
     if(type==='cpf'){
-      if(emailEl){ emailEl.placeholder='000.000.000-00'; emailEl.value=''; emailEl.removeAttribute('inputmode'); }
-      if(label) label.textContent='CPF';
+      if(emailEl){ emailEl.placeholder='000.000.000-00 ou seu@email.com'; emailEl.value=''; emailEl.removeAttribute('inputmode'); }
+      if(label) label.textContent='CPF ou e-mail';
       if(icon){ icon.classList.remove('fa-envelope'); icon.classList.add('fa-id-card'); }
       if(btnCpf){ btnCpf.classList.remove('login-type-btn--inactive'); btnCpf.classList.add('login-type-btn--active'); }
       if(btnEmail){ btnEmail.classList.remove('login-type-btn--active'); btnEmail.classList.add('login-type-btn--inactive'); }

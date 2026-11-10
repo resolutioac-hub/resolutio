@@ -201,6 +201,7 @@
       <div class="form-group"><label for="newClientEmail">E-mail</label><input id="newClientEmail" class="form-control" type="email"></div>
       <div class="form-group"><label for="newClientWhats">WhatsApp</label><input id="newClientWhats" class="form-control" inputmode="numeric" placeholder="(99) 99999-9999" oninput="this.value=formatPhoneBR(this.value)"></div>
       <div class="form-group"><label for="newClientCpf">CPF</label><input id="newClientCpf" class="form-control" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=formatCPF(this.value)"></div>
+      <div class="form-group"><label for="newClientAddress">Endereço</label><input id="newClientAddress" class="form-control" placeholder="Rua, número, bairro, cidade/UF"></div>
       <div class="form-group"><label for="newClientPackage">Pacote</label><select id="newClientPackage" class="form-control" onchange="updatePackageValue()"><option value="essencial">Essencial</option><option value="estrategico">Estratégico</option><option value="excelencia">Excelência</option></select></div>
       <div class="form-group"><label for="newClientMeioPagamento">Meio de pagamento</label><select id="newClientMeioPagamento" class="form-control" onchange="updatePackageValue()"><option value="pix">PIX</option><option value="cartao">Cartão (crédito)</option></select></div>
       <div class="form-group" id="newClientTipoRow"><label for="newClientTipoPagamento">Tipo</label><select id="newClientTipoPagamento" class="form-control" onchange="updatePackageValue()"><option value="avista">À vista</option><option value="parcelado_pix">Parcelado no PIX</option></select></div>
@@ -227,10 +228,13 @@
       <button class="modal-close" onclick="closeModal('modalCliente')">✕</button>
     </div>
     <div class="modal-body" id="modalClienteBody"></div>
-    <div class="modal-footer">
-      <button class="btn btn--ghost btn--sm" onclick="closeModal('modalCliente')">Fechar</button>
-      <button class="btn btn--secondary btn--sm" id="modalClienteEditBtn"><i class="fas fa-pen" style="margin-right:4px"></i> Editar</button>
-      <button class="btn btn--primary btn--sm" id="modalClienteAction">Ver completo</button>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn--danger btn--sm" type="button" onclick="deleteClientFromDetail()">Excluir cliente</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn--ghost btn--sm" onclick="closeModal('modalCliente')">Fechar</button>
+        <button class="btn btn--secondary btn--sm" id="modalClienteEditBtn"><i class="fas fa-pen" style="margin-right:4px"></i> Editar</button>
+        <button class="btn btn--primary btn--sm" id="modalClienteAction">Ver completo</button>
+      </div>
     </div>
   </div>
 </div>
@@ -245,6 +249,7 @@
       <div class="form-group"><label for="editClientEmail">E-mail</label><input id="editClientEmail" class="form-control" type="email"></div>
       <div class="form-group"><label for="editClientWhats">WhatsApp</label><input id="editClientWhats" class="form-control" inputmode="numeric" placeholder="(99) 99999-9999" oninput="this.value=formatPhoneBR(this.value)"></div>
       <div class="form-group"><label for="editClientCpf">CPF</label><input id="editClientCpf" class="form-control" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=formatCPF(this.value)"></div>
+      <div class="form-group"><label for="editClientAddress">Endereço</label><input id="editClientAddress" class="form-control" placeholder="Rua, número, bairro, cidade/UF"></div>
       <div class="form-group"><label for="editClientPackage">Pacote</label><select id="editClientPackage" class="form-control" onchange="updateEditPackageValue()"><option value="essencial">Essencial</option><option value="estrategico">Estratégico</option><option value="excelencia">Excelência</option></select></div>
       <div class="form-group"><label for="editClientMeioPagamento">Meio de pagamento</label><select id="editClientMeioPagamento" class="form-control" onchange="updateEditPackageValue()"><option value="pix">PIX</option><option value="cartao">Cartão (crédito)</option></select></div>
       <div class="form-group" id="editClientTipoRow"><label for="editClientTipoPagamento">Tipo</label><select id="editClientTipoPagamento" class="form-control" onchange="updateEditPackageValue()"><option value="avista">À vista</option><option value="parcelado_pix">Parcelado no PIX</option></select></div>
@@ -253,10 +258,10 @@
       <div class="form-group"><label for="editClientValor">Valor total</label><input id="editClientValor" class="form-control" readonly style="background:#f4efe8;font-weight:700;color:var(--primary)"></div>
       <div class="form-group"><label for="editClientParcelaMensal">Parcela mensal</label><input id="editClientParcelaMensal" class="form-control" readonly style="background:#f4efe8"></div>
       <div class="form-group"><label for="editClientStatus">Status</label><select id="editClientStatus" class="form-control"><option value="ativo">Ativo</option><option value="pausado">Pausado</option><option value="concluido">Concluído</option></select></div>
-      <div class="form-group"><label for="editClientPilar">Pilar atual</label><select id="editClientPilar" class="form-control"><option value="1">1 — Mapeamento</option><option value="2">2 — Arquitetura</option><option value="3">3 — Banca</option><option value="4">4 — Aprovação</option></select></div>
+      <div class="form-group"><label for="editClientPilar">Fase do candidato (pilar atual)</label><select id="editClientPilar" class="form-control"><option value="1">1 — Mapeamento</option><option value="2">2 — Arquitetura</option><option value="3">3 — Banca</option><option value="4">4 — Aprovação</option></select></div>
       <div class="form-group"><label for="editClientResponsible">Colaborador responsável</label><select id="editClientResponsible" class="form-control"></select></div>
     </div>
-    <div class="modal-footer"><button class="btn btn--ghost" onclick="closeModal('editClientModal')">Cancelar</button><button class="btn btn--primary" onclick="saveClientEdit()">Salvar alterações</button></div>
+    <div class="modal-footer" style="justify-content:space-between"><button class="btn btn--danger" type="button" onclick="deleteClient()">Excluir cliente</button><div style="display:flex;gap:8px"><button class="btn btn--ghost" type="button" onclick="resetClientPassword()">Redefinir senha (123)</button><button class="btn btn--ghost" onclick="closeModal('editClientModal')">Cancelar</button><button class="btn btn--primary" onclick="saveClientEdit()">Salvar alterações</button></div></div>
   </div>
 </div>
 
@@ -274,6 +279,7 @@
   let allContratos = [];
   let allEncontros = [];
   let allFuncs = [];
+  let currentClienteNome = null;
 
   // Toast
   function toast(msg, type='success') {
@@ -390,12 +396,13 @@
     document.getElementById('editClientEmail').value = c.email || '';
     document.getElementById('editClientWhats').value = c.whatsapp || c.telefone || '';
     document.getElementById('editClientCpf').value = c.cpf || '';
+    document.getElementById('editClientAddress').value = c.endereco || '';
     document.getElementById('editClientPackage').value = c.pacote || 'essencial';
     document.getElementById('editClientMeioPagamento').value = c.meio_pagamento || 'pix';
     document.getElementById('editClientTipoPagamento').value = c.tipo_pagamento || 'avista';
     document.getElementById('editClientQtdParcelas').value = c.parcelas_total || 6;
     document.getElementById('editClientStatus').value = c.status || 'ativo';
-    document.getElementById('editClientPilar').value = c.pilar_atual || 1;
+    document.getElementById('editClientPilar').value = c.pilar_atual || c.pilar || 1;
     populateDiaVencimento('editClientDiaVencimento');
     document.getElementById('editClientDiaVencimento').value = c.dia_vencimento || '';
     const funcs = allFuncs || [];
@@ -421,6 +428,7 @@
       nome: document.getElementById('editClientName').value.trim(),
       email: document.getElementById('editClientEmail').value.trim(),
       whatsapp, cpf, telefone: whatsapp,
+      endereco: document.getElementById('editClientAddress').value.trim(),
       pacote,
       meio_pagamento: meio,
       tipo_pagamento: tipo,
@@ -434,6 +442,36 @@
     };
     if (!data.nome || !data.email) return toast('Informe nome e e-mail.', 'error');
     try { await API.clientes.update(id, data); closeModal('editClientModal'); toast('Cliente atualizado.'); loadData(); } catch (error) { toast(error.message, 'error'); }
+  }
+
+  function deleteClient() {
+    const id = document.getElementById('editClientId').value;
+    const cliente = allClientes.find(x => (x.id || x.nome) === id);
+    if (cliente) confirmDeleteClient(cliente);
+  }
+
+  function deleteClientFromDetail() {
+    const cliente = allClientes.find(x => x.nome === currentClienteNome);
+    if (cliente) confirmDeleteClient(cliente);
+  }
+
+  async function confirmDeleteClient(cliente) {
+    if (!confirm('Excluir o cliente "' + cliente.nome + '"? Pagamentos, contratos, encontros e materiais vinculados também serão removidos. Esta ação não pode ser desfeita.')) return;
+    try {
+      await API.clientes.remove(cliente.id, cliente.nome);
+      closeModal('editClientModal');
+      closeModal('modalCliente');
+      toast('Cliente excluído.');
+      loadData();
+    } catch (error) { toast(error.message, 'error'); }
+  }
+
+  function resetClientPassword() {
+    const id = document.getElementById('editClientId').value;
+    const cliente = allClientes.find(x => (x.id || x.nome) === id);
+    if (!cliente) return;
+    clearClientPassword(cliente);
+    toast('Senha redefinida para 123. O cliente deverá definir uma nova senha no próximo acesso.');
   }
 
   // Modal
@@ -453,6 +491,7 @@
       nome:document.getElementById('newClientName').value.trim(),
       email:document.getElementById('newClientEmail').value.trim(),
       whatsapp, cpf, telefone:whatsapp,
+      endereco:document.getElementById('newClientAddress').value.trim(),
       pacote,
       meio_pagamento: meio,
       tipo_pagamento: tipo,
@@ -605,6 +644,7 @@
     const pacoteLabel = { excelencia:'Excelência', estrategico:'Estratégico', essencial:'Essencial' };
     const pendencias = getPendencias(cliente);
     const pilar = clientePilar(cliente);
+    currentClienteNome = cliente.nome;
 
     document.getElementById('modalClienteTitle').textContent = cliente.nome;
 
@@ -614,6 +654,7 @@
         <div style="flex:1">
           <div style="font-size:1.1rem;font-weight:700;color:var(--ink)">${cliente.nome}</div>
           <div style="font-size:0.82rem;color:var(--muted)">${cliente.email}${cliente.whatsapp ? ' · ' + cliente.whatsapp : ''}</div>
+          ${cliente.endereco ? `<div style="font-size:0.82rem;color:var(--muted)">Endereço: ${cliente.endereco}</div>` : ''}
           <div style="font-size:0.82rem;color:var(--muted)">Responsável: <strong>${cliente.funcionario || '—'}</strong></div>
           <div style="margin-top:6px"><span class="badge badge--info"><span class="badge-dot"></span>Pilar ${pilar} — ${pilarNome(pilar)}</span></div>
         </div>

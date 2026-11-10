@@ -149,6 +149,9 @@
     <div class="modal-body">
       <div class="form-group"><label>Nome completo *</label><input class="form-control" id="leadNome" placeholder="Nome"></div>
       <div class="form-group"><label>E-mail *</label><input class="form-control" id="leadEmail" type="email" placeholder="email@exemplo.com"></div>
+      <div class="form-group"><label>WhatsApp</label><input class="form-control" id="leadWhats" inputmode="numeric" placeholder="(99) 99999-9999" oninput="this.value=formatPhoneBR(this.value)"></div>
+      <div class="form-group"><label>CPF</label><input class="form-control" id="leadCpf" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=formatCPF(this.value)"></div>
+      <div class="form-group"><label>Endereço</label><input class="form-control" id="leadEndereco" placeholder="Rua, número, bairro, cidade/UF"></div>
       <div class="form-group"><label>Pacote de interesse</label><select class="form-control" id="leadPacote"><option value="excelencia">Excelência (6 meses)</option><option value="estrategico">Estratégico (4 meses)</option><option value="essencial">Essencial (3 meses)</option></select></div>
       <div class="form-group"><label>Origem do primeiro contato</label><select class="form-control" id="leadOrigem"><option value="instagram">Instagram</option><option value="beacons">Beacons / link na bio</option><option value="whatsapp">WhatsApp</option><option value="direct">Direct</option><option value="indicacao">Indicação</option></select></div>
       <div class="form-group"><label>Data do primeiro contato</label><input class="form-control" id="leadDataContato" type="date"></div>
@@ -287,18 +290,24 @@
   function saveLead() {
     const nome = document.getElementById('leadNome').value.trim();
     const email = document.getElementById('leadEmail').value.trim();
+    const whatsapp = document.getElementById('leadWhats').value.trim();
+    const cpf = document.getElementById('leadCpf').value.trim();
+    const endereco = document.getElementById('leadEndereco').value.trim();
     const pacote = document.getElementById('leadPacote').value;
     const origem = document.getElementById('leadOrigem').value;
     if (!nome || !email) return toast('Preencha nome e e-mail', 'error');
     const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
     if (!db.leads) db.leads = [];
     const dataContato = document.getElementById('leadDataContato').value || new Date().toISOString().slice(0,10);
-    const lead = { id: 'l' + Date.now(), nome, email, pacote, origem, status: 'novo', data_primeiro_contato: dataContato, data_criacao: dataContato, historico: [{ data: dataContato, de: '', para: 'novo', obs: 'Lead criado' }] };
+    const lead = { id: 'l' + Date.now(), nome, email, whatsapp, cpf, endereco, pacote, origem, status: 'novo', data_primeiro_contato: dataContato, data_criacao: dataContato, historico: [{ data: dataContato, de: '', para: 'novo', obs: 'Lead criado' }] };
     db.leads.push(lead);
     localStorage.setItem('resolutio_db', JSON.stringify(db));
     closeModal('newLeadModal');
     document.getElementById('leadNome').value = '';
     document.getElementById('leadEmail').value = '';
+    document.getElementById('leadWhats').value = '';
+    document.getElementById('leadCpf').value = '';
+    document.getElementById('leadEndereco').value = '';
     document.getElementById('leadDataContato').value = '';
     toast('Lead salvo!');
     loadData();
@@ -367,6 +376,10 @@ if (!db.clientes.find(c => c.nome === lead.nome)) {
               avatar: lead.nome.split(' ').map(n=>n[0]).join('').slice(0,2),
               nome: lead.nome,
               email: lead.email,
+              whatsapp: lead.whatsapp || lead.telefone || '',
+              telefone: lead.whatsapp || lead.telefone || '',
+              cpf: lead.cpf || '',
+              endereco: lead.endereco || '',
               pacote: lead.pacote || 'essencial',
               status: 'ativo',
               progresso: 0,

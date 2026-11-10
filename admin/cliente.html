@@ -194,6 +194,7 @@
       <div class="client-info" style="flex:1">
         <h1>${c.nome}</h1>
         <p>${c.email}</p>
+        ${c.endereco ? `<p>${c.endereco}</p>` : ''}
         <div class="client-meta">
           <div class="client-meta-item">Pacote: <strong>${pacoteLabel[c.pacote] || c.pacote}</strong></div>
           <div class="client-meta-item">Status: <strong>${labelForStatus(c.status)}</strong></div>

@@ -110,6 +110,7 @@
       <div class="form-group"><label for="newClientEmail">E-mail</label><input id="newClientEmail" class="form-control" type="email"></div>
       <div class="form-group"><label for="newClientWhats">WhatsApp</label><input id="newClientWhats" class="form-control" inputmode="numeric" placeholder="(99) 99999-9999" oninput="this.value=formatPhoneBR(this.value)"></div>
       <div class="form-group"><label for="newClientCpf">CPF</label><input id="newClientCpf" class="form-control" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=formatCPF(this.value)"></div>
+      <div class="form-group"><label for="newClientAddress">Endereço</label><input id="newClientAddress" class="form-control" placeholder="Rua, número, bairro, cidade/UF"></div>
       <div class="form-group"><label for="newClientPackage">Pacote</label><select id="newClientPackage" class="form-control"><option value="essencial">Essencial</option><option value="estrategico">Estratégico</option><option value="excelencia">Excelência</option></select></div>
       <div class="form-group">
         <label for="newClientEntrada">Valor de Entrada (R$)</label>
@@ -238,7 +239,8 @@
     const pacote = document.getElementById('newClientPackage').value;
     const entradaVal = parseFloat(document.getElementById('newClientEntrada').value) || 0;
 
-    const data = { nome:document.getElementById('newClientName').value.trim(), email:document.getElementById('newClientEmail').value.trim(), whatsapp, cpf, telefone:whatsapp, pacote, funcionario:nome };
+    const endereco = document.getElementById('newClientAddress').value.trim();
+    const data = { nome:document.getElementById('newClientName').value.trim(), email:document.getElementById('newClientEmail').value.trim(), whatsapp, cpf, telefone:whatsapp, endereco, pacote, funcionario:nome };
     if (!data.nome || !data.email) return toast('Informe nome e e-mail.', 'error');
     if (cpf.replace(/\D/g,'').length !== 11) return toast('Informe um CPF válido.', 'error');
     if (whatsapp.replace(/\D/g,'').length < 10) return toast('Informe um WhatsApp válido.', 'error');
@@ -456,7 +458,7 @@
       const nextPilar = Math.min(4, currentPilar + 1);
       if (nextPilar === currentPilar) return toast('Cliente já está no pilar máximo (Pilar 4).', 'info');
 
-      await API.clientes.update(clientId, { pilar: nextPilar });
+      await API.clientes.update(clientId, { pilar_atual: nextPilar });
       toast(`Cliente avançado para o Pilar ${nextPilar}!`, 'success');
       load();
     } catch (e) { toast(e.message, 'error'); }
@@ -474,7 +476,7 @@
     document.getElementById('modalClientTitle').textContent = `Cliente: ${client.nome}`;
     document.getElementById('detailAvatar').textContent = client.avatar || client.nome.slice(0,2).toUpperCase();
     document.getElementById('detailName').textContent = client.nome;
-    document.getElementById('detailContact').textContent = `${client.email || ''} | CPF: ${client.cpf || 'Não informado'} | WhatsApp: ${client.whatsapp || 'Não informado'} | Pacote: ${pacoteLabel[client.pacote] || client.pacote}`;
+    document.getElementById('detailContact').textContent = `${client.email || ''} | CPF: ${client.cpf || 'Não informado'} | WhatsApp: ${client.whatsapp || 'Não informado'} | Pacote: ${pacoteLabel[client.pacote] || client.pacote}${client.endereco ? ' | Endereço: ' + client.endereco : ''}`;
     
     document.getElementById('detailPilarSelect').value = clientePilar(client);
     document.getElementById('detailNotes').value = client.observacoes || client.notas || '';
@@ -495,7 +497,7 @@
     const id = document.getElementById('detailClientId').value;
     const newPilar = parseInt(document.getElementById('detailPilarSelect').value, 10);
     try {
-      await API.clientes.update(id, { pilar: newPilar });
+      await API.clientes.update(id, { pilar_atual: newPilar });
       toast('Pilar do cliente atualizado!', 'success');
       load();
     } catch (e) { toast(e.message, 'error'); }

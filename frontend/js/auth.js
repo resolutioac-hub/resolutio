@@ -53,8 +53,9 @@ function requireAuth(allowedRoles) {
     window.location.href = dest;
     return null;
   }
-  // Cliente em primeiro acesso (passou a senha inicial 123) precisa definir nova senha
-  if (role === 'cliente' && !window.location.pathname.includes('definir-senha.html') && clienteNeedsPasswordSetup(user)) {
+  // Cliente em primeiro acesso (passou a senha inicial 123) precisa definir nova senha.
+  // A checagem ignora a extensao porque o deploy usa cleanUrls (sem .html).
+  if (role === 'cliente' && !window.location.pathname.includes('definir-senha') && clienteNeedsPasswordSetup(user)) {
     window.location.href = '../cliente/definir-senha.html';
     return null;
   }
@@ -98,7 +99,20 @@ function clienteNeedsPasswordSetup(user) {
   const email = String(user?.email || '').toLowerCase();
   if (!email) return false;
   const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
-  return !passwords[email];
+  if (passwords[email]) return false;
+  const cpfDigits = String(user?.cpf || '').replace(/\D/g, '');
+  if (cpfDigits && passwords['cpf:' + cpfDigits]) return false;
+  return true;
+}
+
+// Remove a senha do cliente para que o primeiro acesso volte a funcionar com 123.
+function clearClientPassword(client) {
+  const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
+  const email = String(client?.email || '').toLowerCase();
+  if (email) delete passwords[email];
+  const cpfDigits = String(client?.cpf || '').replace(/\D/g, '');
+  if (cpfDigits) delete passwords['cpf:' + cpfDigits];
+  localStorage.setItem('resolutio_passwords', JSON.stringify(passwords));
 }
 
 // Salva a senha definida pelo cliente no primeiro acesso (e-mail + CPF)

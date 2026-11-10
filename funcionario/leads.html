@@ -91,6 +91,8 @@
       <div class="form-group"><label for="leadNome">Nome do Lead</label><input id="leadNome" class="form-control" placeholder="Nome completo"></div>
       <div class="form-group"><label for="leadEmail">E-mail</label><input id="leadEmail" class="form-control" type="email"></div>
       <div class="form-group"><label for="leadWhats">WhatsApp / Telefone</label><input id="leadWhats" class="form-control" placeholder="(99) 99999-9999" oninput="this.value=formatPhoneBR(this.value)"></div>
+      <div class="form-group"><label for="leadCpf">CPF</label><input id="leadCpf" class="form-control" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=formatCPF(this.value)"></div>
+      <div class="form-group"><label for="leadEndereco">Endereço</label><input id="leadEndereco" class="form-control" placeholder="Rua, número, bairro, cidade/UF"></div>
       <div class="form-group"><label for="leadPacote">Pacote de Interesse</label><select id="leadPacote" class="form-control"><option value="essencial">Essencial</option><option value="estrategico">Estratégico</option><option value="excelencia">Excelência</option></select></div>
       <div class="form-group"><label for="leadOrigem">Origem do Lead</label><select id="leadOrigem" class="form-control"><option value="Pipefy">Pipefy / Formulário</option><option value="Instagram">Instagram Direct</option><option value="Indicação">Indicação</option><option value="Google">Google / Site</option></select></div>
     </div>
@@ -185,17 +187,21 @@
     const nome = document.getElementById('leadNome').value.trim();
     const email = document.getElementById('leadEmail').value.trim();
     const whatsapp = document.getElementById('leadWhats').value.trim();
+    const cpf = document.getElementById('leadCpf').value.trim();
+    const endereco = document.getElementById('leadEndereco').value.trim();
     const pacote = document.getElementById('leadPacote').value;
     const origem = document.getElementById('leadOrigem').value;
 
     if (!nome) return toast('Informe o nome do lead.', 'error');
 
     try {
-      await API.leads.create({ nome, email, whatsapp, pacote, origem, estagio: 'novo' });
+      await API.leads.create({ nome, email, whatsapp, cpf, endereco, pacote, origem, estagio: 'novo' });
       closeModal('newLeadModal');
       document.getElementById('leadNome').value = '';
       document.getElementById('leadEmail').value = '';
       document.getElementById('leadWhats').value = '';
+      document.getElementById('leadCpf').value = '';
+      document.getElementById('leadEndereco').value = '';
       toast('Lead cadastrado no pipeline!', 'success');
       load();
     } catch (e) { toast(e.message, 'error'); }
@@ -267,9 +273,12 @@
         nome: lead.nome,
         email: lead.email || `${lead.nome.toLowerCase().replace(/\s+/g,'')}@cliente.com`,
         whatsapp: lead.whatsapp,
+        telefone: lead.whatsapp || lead.telefone || '',
+        cpf: lead.cpf || '',
+        endereco: lead.endereco || '',
         pacote: lead.pacote || 'essencial',
         status: 'ativo',
-        pilar: 1,
+        pilar_atual: 1,
         valor_entrada: entradaVal
       });
 

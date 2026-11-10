@@ -36,7 +36,7 @@
 }
 
 * { box-sizing: border-box; }
-html { font-size: 16px; scroll-behavior: smooth; }
+html { font-size: 16px; scroll-behavior: smooth; scrollbar-gutter: stable; }
 body {
   margin: 0;
   min-width: 320px;
@@ -468,13 +468,14 @@ table tbody tr:hover td { background: rgba(253,246,236,0.6) !important; }
 
 /* ================= MOVIMENTO DE ENTRADA ================= */
 /* Mesma curva e mesma distancia da mentoria: sobe 30px em 0.7s */
+/* Apenas opacidade: animacoes de deslocamento causavam tremor ao re-renderizar as telas. */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 @keyframes fadeUpSmall {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.94); }
@@ -485,17 +486,15 @@ table tbody tr:hover td { background: rgba(253,246,236,0.6) !important; }
   to   { opacity: 1; transform: translateX(0); }
 }
 
-.anim-up {
-  opacity: 0 !important;
-  transform: translateY(30px) !important;
-  animation: none !important;
-  will-change: opacity, transform;
-}
+/* As paginas declaram .anim-up no <style> interno com translateY + riseUp.
+   Essas regras com !important vencem o estilo inline e mantem a tela estavel:
+   nada de reanimar/deslocar conteudo a cada renderizacao (causa dos tremores). */
+.anim-up,
 .anim-up.is-visible {
   opacity: 1 !important;
-  transform: translateY(0) !important;
-  animation: fadeUp 0.7s var(--ease) both !important;
-  animation-delay: var(--motion-delay, 0ms) !important;
+  transform: none !important;
+  animation: none !important;
+  will-change: auto !important;
 }
 
 /* Entrada das telas: topo, titulos e KPIs, sem depender do observer */
