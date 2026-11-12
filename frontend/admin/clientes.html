@@ -466,11 +466,11 @@
     } catch (error) { toast(error.message, 'error'); }
   }
 
-  function resetClientPassword() {
+  async function resetClientPassword() {
     const id = document.getElementById('editClientId').value;
     const cliente = allClientes.find(x => (x.id || x.nome) === id);
     if (!cliente) return;
-    clearClientPassword(cliente);
+    await clearClientPassword(cliente);
     toast('Senha redefinida para 123. O cliente deverá definir uma nova senha no próximo acesso.');
   }
 

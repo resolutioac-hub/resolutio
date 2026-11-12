@@ -75,15 +75,23 @@
   const name = user?.nome || 'bem-vindo(a)';
   document.getElementById('welcomeName').textContent = name;
 
-  document.getElementById('saveBtn').addEventListener('click', () => {
+  document.getElementById('saveBtn').addEventListener('click', async () => {
     const senha = document.getElementById('newPassword').value;
     const confirmacao = document.getElementById('newPasswordConfirm').value;
     if (!senha || !confirmacao) return toast('Preencha os dois campos.', 'error');
     if (senha.length < 6) return toast('A senha deve ter pelo menos 6 caracteres.', 'error');
     if (senha !== confirmacao) return toast('As senhas não conferem. Tente novamente.', 'error');
-    saveInitialPassword(senha);
-    toast('Senha definida com sucesso!');
-    setTimeout(() => { window.location.href = './dashboard.html'; }, 900);
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    try {
+      await saveInitialPassword(senha);
+      toast('Senha definida com sucesso!');
+      setTimeout(() => { window.location.href = './dashboard.html'; }, 900);
+    } catch (error) {
+      toast('Não foi possível salvar a senha. Tente novamente.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   document.querySelectorAll('#newPassword, #newPasswordConfirm').forEach(i => {

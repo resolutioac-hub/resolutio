@@ -101,17 +101,14 @@
 <script>
   requireAuth(['cliente']); setupSidebar();
 
-  function cancelarEncontro(eventId) {
+  async function cancelarEncontro(eventId) {
     if (!confirm('Tem certeza que deseja desmarcar este encontro?')) return;
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    if (db.encontros) {
-      const ev = db.encontros.find(e => e.id === eventId);
-      if (ev) {
-        ev.status = 'cancelado';
-        localStorage.setItem('resolutio_db', JSON.stringify(db));
-        toast('Encontro desmarcado');
-        load();
-      }
+    try {
+      await API.encontros.update(eventId, { status: 'cancelado' });
+      toast('Encontro desmarcado');
+      load();
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel desmarcar o encontro.', 'error');
     }
   }
 

@@ -230,7 +230,6 @@
   }
 
   function renderKanban() {
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
     let html = '';
     stages.forEach(stage => {
       const leads = allLeads.filter(l => l.status === stage.id);
@@ -287,7 +286,7 @@
     document.getElementById('leadsTable').innerHTML = html;
   }
 
-  function saveLead() {
+  async function saveLead() {
     const nome = document.getElementById('leadNome').value.trim();
     const email = document.getElementById('leadEmail').value.trim();
     const whatsapp = document.getElementById('leadWhats').value.trim();
@@ -296,21 +295,22 @@
     const pacote = document.getElementById('leadPacote').value;
     const origem = document.getElementById('leadOrigem').value;
     if (!nome || !email) return toast('Preencha nome e e-mail', 'error');
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    if (!db.leads) db.leads = [];
     const dataContato = document.getElementById('leadDataContato').value || new Date().toISOString().slice(0,10);
-    const lead = { id: 'l' + Date.now(), nome, email, whatsapp, cpf, endereco, pacote, origem, status: 'novo', data_primeiro_contato: dataContato, data_criacao: dataContato, historico: [{ data: dataContato, de: '', para: 'novo', obs: 'Lead criado' }] };
-    db.leads.push(lead);
-    localStorage.setItem('resolutio_db', JSON.stringify(db));
-    closeModal('newLeadModal');
-    document.getElementById('leadNome').value = '';
-    document.getElementById('leadEmail').value = '';
-    document.getElementById('leadWhats').value = '';
-    document.getElementById('leadCpf').value = '';
-    document.getElementById('leadEndereco').value = '';
-    document.getElementById('leadDataContato').value = '';
-    toast('Lead salvo!');
-    loadData();
+    const lead = { nome, email, whatsapp, cpf, endereco, pacote, origem, status: 'novo', data_primeiro_contato: dataContato, data_criacao: dataContato, historico: [{ data: dataContato, de: '', para: 'novo', obs: 'Lead criado' }] };
+    try {
+      await API.leads.create(lead);
+      closeModal('newLeadModal');
+      document.getElementById('leadNome').value = '';
+      document.getElementById('leadEmail').value = '';
+      document.getElementById('leadWhats').value = '';
+      document.getElementById('leadCpf').value = '';
+      document.getElementById('leadEndereco').value = '';
+      document.getElementById('leadDataContato').value = '';
+      toast('Lead salvo!');
+      loadData();
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel salvar o lead.', 'error');
+    }
   }
 
   function openQualify(id) {
@@ -325,26 +325,30 @@
   }
 
   let currentQualifyId = null;
-  function saveQualificacao() {
+  async function saveQualificacao() {
     const nota = parseInt(document.getElementById('qualifyNota').value);
     const interesse = document.getElementById('qualifyInteresse').value;
     const perfil = document.getElementById('qualifyPerfil').value;
     const obs = document.getElementById('qualifyObs').value.trim();
     if (!nota || nota < 1 || nota > 10) return toast('Nota deve ser entre 1 e 10', 'error');
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    const lead = (db.leads || []).find(l => l.id === currentQualifyId);
+    const lead = allLeads.find(l => l.id === currentQualifyId);
     if (!lead) return;
     const antigo = lead.status;
-    lead.qualificacao = { nota, interesse, perfil, obs, data: new Date().toISOString().slice(0,10) };
-    if (lead.status === 'novo') {
-      lead.status = 'em_conversa';
-      if (!lead.historico) lead.historico = [];
-      lead.historico.push({ data: new Date().toISOString().slice(0,10), de: antigo, para: 'em_conversa', obs: 'Qualificação registrada' });
+    const historico = Array.isArray(lead.historico) ? [...lead.historico] : [];
+    const qualificacao = { nota, interesse, perfil, obs, data: new Date().toISOString().slice(0,10) };
+    let status = lead.status;
+    if (status === 'novo') {
+      status = 'em_conversa';
+      historico.push({ data: new Date().toISOString().slice(0,10), de: antigo, para: 'em_conversa', obs: 'Qualificação registrada' });
     }
-    localStorage.setItem('resolutio_db', JSON.stringify(db));
-    closeModal('qualifyModal');
-    toast('Qualificação salva!');
-    loadData();
+    try {
+      await API.leads.update(currentQualifyId, { qualificacao, status, historico });
+      closeModal('qualifyModal');
+      toast('Qualificação salva!');
+      loadData();
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel salvar a qualificação.', 'error');
+    }
   }
 
   let currentAdvanceId = null;
@@ -358,42 +362,71 @@
     openModal('advanceModal');
   }
 
-  function saveAdvance() {
+  async function saveAdvance() {
     const next = document.getElementById('advanceNextStage').value;
     const obs = document.getElementById('advanceObs').value.trim();
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    const lead = (db.leads || []).find(l => l.id === currentAdvanceId);
+    const lead = allLeads.find(l => l.id === currentAdvanceId);
     if (!lead) return;
-    const antigo = lead.status;
-    lead.status = next;
-    if (!lead.historico) lead.historico = [];
-    lead.historico.push({ data: new Date().toISOString().slice(0,10), de: antigo, para: next, obs: obs || 'Avançado manualmente' });
+
+    let email = '';
+    let cpf = '';
     if (next === 'fechado') {
-      if (!db.clientes) db.clientes = [];
-if (!db.clientes.find(c => c.nome === lead.nome)) {
-            db.clientes.push({
-              id: 'c' + Date.now(),
-              avatar: lead.nome.split(' ').map(n=>n[0]).join('').slice(0,2),
-              nome: lead.nome,
-              email: lead.email,
-              whatsapp: lead.whatsapp || lead.telefone || '',
-              telefone: lead.whatsapp || lead.telefone || '',
-              cpf: lead.cpf || '',
-              endereco: lead.endereco || '',
-              pacote: lead.pacote || 'essencial',
-              status: 'ativo',
-              progresso: 0,
-              pilar_atual: 1,
-              pendencias: [],
-              proximo_encontro: new Date(Date.now()+7*86400000).toISOString().slice(0,16).replace('T',' '),
-              funcionario: ''
-            });
+      email = String(lead.email || '').trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        email = (prompt('E-mail do cliente (necessário para o login):', email) || '').trim();
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return toast('Informe um e-mail válido para converter o lead em cliente.', 'error');
+      }
+      cpf = String(lead.cpf || '').replace(/\D/g, '');
+      if (cpf.length !== 11) {
+        cpf = (prompt('CPF do cliente (11 dígitos):', cpf) || '').replace(/\D/g, '');
+      }
+      if (cpf.length !== 11) {
+        return toast('Informe um CPF válido com 11 dígitos para converter o lead em cliente.', 'error');
       }
     }
-    localStorage.setItem('resolutio_db', JSON.stringify(db));
-    closeModal('advanceModal');
-    toast('Lead avançado!');
-    loadData();
+
+    const antigo = lead.status;
+    const historico = Array.isArray(lead.historico) ? [...lead.historico] : [];
+    historico.push({ data: new Date().toISOString().slice(0,10), de: antigo, para: next, obs: obs || 'Avançado manualmente' });
+
+    try {
+      if (next === 'fechado') {
+        const clientes = await API.clientes.list();
+        const cpfDigits = v => String(v || '').replace(/\D/g, '');
+        const existe = clientes.find(c =>
+          (c.email && c.email.toLowerCase() === email.toLowerCase()) ||
+          (cpfDigits(c.cpf) && cpfDigits(c.cpf) === cpf)
+        );
+        if (!existe) {
+          await API.clientes.create({
+            avatar: lead.nome.split(' ').map(n=>n[0]).join('').slice(0,2),
+            nome: lead.nome,
+            email,
+            whatsapp: lead.whatsapp || lead.telefone || '',
+            telefone: lead.whatsapp || lead.telefone || '',
+            cpf,
+            endereco: lead.endereco || '',
+            pacote: lead.pacote || 'essencial',
+            status: 'ativo',
+            progresso: 0,
+            pilar_atual: 1,
+            pendencias: [],
+            proximo_encontro: new Date(Date.now()+7*86400000).toISOString().slice(0,16).replace('T',' '),
+            funcionario: ''
+          });
+        }
+      }
+      const patch = { status: next, historico };
+      if (next === 'fechado') { patch.email = email; patch.cpf = cpf; }
+      await API.leads.update(currentAdvanceId, patch);
+      closeModal('advanceModal');
+      toast('Lead avançado!');
+      loadData();
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel avançar o lead.', 'error');
+    }
   }
 
   function openHistory(id) {

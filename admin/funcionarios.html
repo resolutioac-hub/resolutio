@@ -176,10 +176,6 @@
     const funcao=document.getElementById('newStaffRole').value; const data={nome:document.getElementById('newStaffName').value.trim(),email:document.getElementById('newStaffEmail').value.trim(),senha:document.getElementById('newStaffPassword').value,funcao,cargo:roleCatalog[funcao].label};
     if (!data.nome || !data.email || data.senha.length < 6) return toast('Preencha nome, e-mail e uma senha de 6 caracteres.','error');
     try { await API.funcionarios.create(data);
-      // Armazenar senha para login future
-      const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
-      passwords['funcionario:' + data.email] = data.senha;
-      localStorage.setItem('resolutio_passwords', JSON.stringify(passwords));
       closeCreateStaffModal(); toast('Funcionário cadastrado.'); loadEquipe(); } catch (error) { toast(error.message,'error'); }
   }
   function openRoleModal(requestId, staffId, currentRole='') { selectedRequestId=requestId; selectedStaffId=staffId; document.getElementById('staffRoleTitle').textContent=staffId?'Editar função':'Autorizar funcionário'; const select=document.getElementById('staffRole'); select.innerHTML=roleOptions(currentRole); select.onchange=()=>renderResponsibilities(select.value); renderResponsibilities(select.value); document.getElementById('staffRoleModal').classList.add('open'); }

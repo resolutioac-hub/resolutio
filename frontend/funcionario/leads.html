@@ -264,17 +264,32 @@
   async function convertToClient(leadId) {
     const lead = allLeads.find(l => l.id === leadId);
     if (!lead) return;
-    
+
+    let email = String(lead.email || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      email = (prompt('E-mail do cliente (necessário para o login):', email) || '').trim();
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return toast('Informe um e-mail válido para converter o lead em cliente.', 'error');
+    }
+    let cpf = String(lead.cpf || '').replace(/\D/g, '');
+    if (cpf.length !== 11) {
+      cpf = (prompt('CPF do cliente (11 dígitos):', cpf) || '').replace(/\D/g, '');
+    }
+    if (cpf.length !== 11) {
+      return toast('Informe um CPF válido com 11 dígitos para converter o lead em cliente.', 'error');
+    }
+
     const entradaPrompt = prompt(`Converter "${lead.nome}" em Cliente.\nSe o cliente pagou valor de ENTRADA/SINAL hoje, digite o valor (ex: 500):`, "");
     const entradaVal = parseFloat(entradaPrompt) || 0;
 
     try {
       await API.clientes.create({
         nome: lead.nome,
-        email: lead.email || `${lead.nome.toLowerCase().replace(/\s+/g,'')}@cliente.com`,
+        email,
         whatsapp: lead.whatsapp,
         telefone: lead.whatsapp || lead.telefone || '',
-        cpf: lead.cpf || '',
+        cpf,
         endereco: lead.endereco || '',
         pacote: lead.pacote || 'essencial',
         status: 'ativo',
@@ -286,7 +301,7 @@
         const todayStr = new Date().toISOString().slice(0, 10);
         await API.financeiro.create({
           cliente: lead.nome,
-          email: lead.email || '',
+          email,
           whatsapp: lead.whatsapp || '',
           descricao: `Entrada da Mentoria (${lead.pacote || 'Mentoria'})`,
           valor: entradaVal,

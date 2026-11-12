@@ -5,41 +5,39 @@ const ROLES = {
   cliente: { label:'Cliente', home:'../cliente/dashboard.html', color:'#8B5CF6' }
 };
 
-const ADMIN_LOGIN_KEY = 'resolutio_admin_login';
-const DEFAULT_ADMIN_LOGIN = 'admin@resolutio.com';
+// Versao da sessao. Sessoes antigas (que dependiam de dados no localStorage)
+// sao descartadas para forcar um novo login com o Supabase.
+const SESSION_VERSION = 'v3-supabase';
 
 function normalizeLogin(value) {
   return String(value || '').trim().toLowerCase();
 }
 
-function getAdminLogin() {
-  return normalizeLogin(localStorage.getItem(ADMIN_LOGIN_KEY) || DEFAULT_ADMIN_LOGIN);
-}
-
-function isAdminIdentifier(identifier) {
-  const normalized = normalizeLogin(identifier);
-  const hasCustomLogin = Boolean(localStorage.getItem(ADMIN_LOGIN_KEY));
-  return normalized === getAdminLogin() || (!hasCustomLogin && normalized === 'admin');
-}
-
-function getAdminPassword(passwords) {
-  const login = getAdminLogin();
-  return passwords.admin || passwords[`admin:${login}`] || passwords[login] || passwords[DEFAULT_ADMIN_LOGIN];
-}
-
-function migrateAdminPassword(passwords) {
-  const current = getAdminPassword(passwords);
-  if (current) passwords.admin = current;
-  const legacyKeys = [DEFAULT_ADMIN_LOGIN, `admin:${getAdminLogin()}`, getAdminLogin()];
-  legacyKeys.forEach(key => { if (key !== 'admin') delete passwords[key]; });
-}
-
 function getSession() {
   try {
+    if (localStorage.getItem('resolutio_session_version') !== SESSION_VERSION) {
+      localStorage.removeItem('resolutio_role');
+      localStorage.removeItem('resolutio_user');
+      return { role: null, user: null };
+    }
     const role = localStorage.getItem('resolutio_role');
     const user = JSON.parse(localStorage.getItem('resolutio_user') || 'null');
     return { role, user };
-  } catch { return { role:null, user:null }; }
+  } catch {
+    return { role: null, user: null };
+  }
+}
+
+function setSession(role, user) {
+  localStorage.setItem('resolutio_session_version', SESSION_VERSION);
+  localStorage.setItem('resolutio_role', role);
+  localStorage.setItem('resolutio_user', JSON.stringify(user || null));
+}
+
+function updateSessionUser(patch) {
+  const { role, user } = getSession();
+  if (!role || !user) return;
+  setSession(role, { ...user, ...(patch || {}) });
 }
 
 function requireAuth(allowedRoles) {
@@ -53,113 +51,70 @@ function requireAuth(allowedRoles) {
     window.location.href = dest;
     return null;
   }
-  // Cliente em primeiro acesso (passou a senha inicial 123) precisa definir nova senha.
-  // A checagem ignora a extensao porque o deploy usa cleanUrls (sem .html).
-  if (role === 'cliente' && !window.location.pathname.includes('definir-senha') && clienteNeedsPasswordSetup(user)) {
-    window.location.href = '../cliente/definir-senha.html';
-    return null;
+  if (role === 'cliente' && !window.location.pathname.includes('definir-senha')) {
+    if (clienteNeedsPasswordSetup(user)) {
+      window.location.href = '../cliente/definir-senha.html';
+      return null;
+    }
   }
   return role;
 }
 
 function logout() {
+  localStorage.removeItem('resolutio_session_version');
   localStorage.removeItem('resolutio_role');
   localStorage.removeItem('resolutio_user');
-  // manter DB mock
   window.location.href = '../index.html';
 }
 
-// Busca cliente por e-mail ou CPF
-function findClientByIdentifier(identifier) {
-  const normalized = String(identifier || '').trim().toLowerCase();
-  const cpfDigits = normalized.replace(/\D/g, '');
-  const db = getDB();
-  return (db.clientes || []).find(c =>
-    (c.email && c.email.toLowerCase() === normalized) ||
-    (c.cpf && c.cpf.replace(/\D/g, '') === cpfDigits && cpfDigits.length === 11)
-  ) || null;
-}
-
-// Busca funcionario por e-mail
-function findFuncionarioByEmail(identifier) {
-  const normalized = String(identifier || '').trim().toLowerCase();
-  const db = getDB();
-  return (db.funcionarios || []).find(f =>
-    f.ativo && f.email && f.email.toLowerCase() === normalized
-  ) || null;
-}
-
-// Chave da senha armazenada de um cliente (sempre pelo e-mail)
-function clientPasswordKey(client) {
-  return (client && client.email ? String(client.email).toLowerCase() : '') || '';
-}
-
-// Cliente ainda não definiu uma senha própria (primeiro acesso / senha inicial 123)
+// Cliente ainda nao definiu senha propria (primeiro acesso com 123).
 function clienteNeedsPasswordSetup(user) {
-  const email = String(user?.email || '').toLowerCase();
-  if (!email) return false;
-  const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
-  if (passwords[email]) return false;
-  const cpfDigits = String(user?.cpf || '').replace(/\D/g, '');
-  if (cpfDigits && passwords['cpf:' + cpfDigits]) return false;
-  return true;
+  return !!user && user.role === 'cliente' && user.hasPassword === false;
+}
+
+// Autentica no Supabase. Retorna { role, user } ou null.
+async function authenticate(identifier, password) {
+  if (window.ResolutioCloud?.ready) await window.ResolutioCloud.ready;
+  const rows = await API.auth.verify(identifier, password);
+  if (!Array.isArray(rows) || !rows.length) return null;
+  const row = rows[0];
+  return {
+    role: row.found_role,
+    user: {
+      id: row.found_id || '',
+      email: String(row.found_email || '').toLowerCase(),
+      nome: row.found_nome || '',
+      cpf: row.found_cpf || '',
+      funcao: row.found_funcao || '',
+      role: row.found_role,
+      hasPassword: row.found_has_password === true
+    }
+  };
+}
+
+async function verifyCredentials(identifier, password) {
+  try {
+    const result = await authenticate(identifier, password);
+    return Boolean(result);
+  } catch (err) {
+    console.error('[Resolutio] Falha ao verificar credenciais:', err);
+    return false;
+  }
 }
 
 // Remove a senha do cliente para que o primeiro acesso volte a funcionar com 123.
-function clearClientPassword(client) {
-  const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
+async function clearClientPassword(client) {
   const email = String(client?.email || '').toLowerCase();
-  if (email) delete passwords[email];
-  const cpfDigits = String(client?.cpf || '').replace(/\D/g, '');
-  if (cpfDigits) delete passwords['cpf:' + cpfDigits];
-  localStorage.setItem('resolutio_passwords', JSON.stringify(passwords));
+  await API.auth.deletePassword(email, client?.cpf || null);
 }
 
-// Salva a senha definida pelo cliente no primeiro acesso (e-mail + CPF)
-function saveInitialPassword(password) {
+// Salva a senha definida pelo cliente no primeiro acesso (e-mail + CPF).
+async function saveInitialPassword(password) {
   const { user } = getSession();
   const email = String(user?.email || '').toLowerCase();
-  const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
-  if (email) passwords[email] = password;
-  if (user?.cpf) {
-    const cpfDigits = String(user.cpf).replace(/\D/g, '');
-    if (cpfDigits && cpfDigits.length === 11) passwords['cpf:' + cpfDigits] = password;
-  }
-  localStorage.setItem('resolutio_passwords', JSON.stringify(passwords));
-}
-
-// Verifica credenciais de login.
-// Admin: login atual (ou "admin" antes da primeira alteração) e senha armazenada.
-// Cliente: e-mail ou CPF. Funcionário: e-mail.
-async function verifyCredentials(identifier, password) {
-  const normalized = normalizeLogin(identifier);
-  const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
-  if (isAdminIdentifier(normalized)) {
-    migrateAdminPassword(passwords);
-    localStorage.setItem('resolutio_passwords', JSON.stringify(passwords));
-    const stored = getAdminPassword(passwords);
-    return password === (stored || '123');
-  }
-  // Verificar se é cliente (por e-mail ou CPF)
-  const client = findClientByIdentifier(normalized);
-  if (client) {
-    const key = clientPasswordKey(client);
-    if (key && passwords[key]) return password === passwords[key];
-    const cpfDigits = String(client.cpf || '').replace(/\D/g, '');
-    if (cpfDigits && passwords['cpf:' + cpfDigits]) return password === passwords['cpf:' + cpfDigits];
-    // Primeiro acesso do cliente — senha padrão 123
-    return password === '123';
-  }
-  // Verificar se é funcionário (por e-mail)
-  const func = findFuncionarioByEmail(normalized);
-  if (func) {
-    const funcPassword = passwords['funcionario:' + func.email.toLowerCase()];
-    if (funcPassword) return password === funcPassword;
-    // Primeiro acesso do funcionário — senha padrão 123
-    return password === '123';
-  }
-  // Nenhum usuário encontrado
-  return false;
+  if (!email) throw new Error('Sessao invalida. Faca login novamente.');
+  await API.auth.savePassword(email, password, user?.cpf || null);
+  updateSessionUser({ hasPassword: true });
 }
 
 function renderUserBadge() {
@@ -174,14 +129,11 @@ function renderUserBadge() {
 
 function setupSidebar() {
   const { role } = getSession();
-  // highlight active nav
-  const path = window.location.pathname;
   document.querySelectorAll('.nav-item').forEach(a=>{
-    if (a.getAttribute('href') && path.includes(a.getAttribute('href').replace('./','').replace('../',''))) {
+    if (a.getAttribute('href') && window.location.pathname.includes(a.getAttribute('href').replace('./','').replace('../',''))) {
       // already handled via .active in HTML
     }
   });
-  // user mini
   const badge = renderUserBadge();
   const nameEl = document.getElementById('userName');
   const emailEl = document.getElementById('userEmail');
@@ -255,37 +207,30 @@ async function saveNewPassword() {
   const confirmation = document.getElementById('newPasswordConfirm').value;
   if (password.length < 6) return toast('A senha deve ter pelo menos 6 caracteres.', 'error');
   if (password !== confirmation) return toast('As senhas não conferem.', 'error');
-  const email = session.user?.email || session.role;
+  const email = session.role === 'admin' ? 'admin@resolutio.com' : String(session.user?.email || '').toLowerCase();
+  if (!email) return toast('Sessão inválida. Faça login novamente.', 'error');
   const ok = await verifyCredentials(email, current);
   if (!ok) return toast('Senha atual incorreta.', 'error');
-  const passwords = JSON.parse(localStorage.getItem('resolutio_passwords') || '{}');
-  const normalized = String(email).toLowerCase();
-  if (session.role === 'admin') {
-    passwords.admin = password;
-  } else if (session.role === 'funcionario') {
-    passwords['funcionario:' + normalized] = password;
-  } else {
-    const key = Object.keys(passwords).find(k => k.toLowerCase() === normalized) || normalized;
-    passwords[key] = password;
+  try {
+    await API.auth.savePassword(email, password, session.user?.cpf || null);
+    updateSessionUser({ hasPassword: true });
+    document.getElementById('changePasswordModal').classList.remove('open');
+    toast('Senha alterada com sucesso.');
+  } catch (err) {
+    toast(err.message || 'Não foi possível alterar a senha.', 'error');
   }
-  localStorage.setItem('resolutio_passwords', JSON.stringify(passwords));
-  document.getElementById('changePasswordModal').classList.remove('open');
-  toast('Senha alterada com sucesso.');
 }
 
-// Mobile toggle
 function toggleSidebar() {
   document.getElementById('sidebar')?.classList.toggle('open');
 }
 
-// Modal helpers
 function openModal(id) { document.getElementById(id)?.classList.add('open'); }
 function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
 document.addEventListener('click', (e)=>{
   if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
 });
 
-// Toast
 function toast(msg, type='success') {
   let c = document.getElementById('toastContainer');
   if (!c) {

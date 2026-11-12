@@ -461,6 +461,21 @@ CREATE POLICY "service_all_slots" ON slots FOR ALL USING (true) WITH CHECK (true
 CREATE POLICY "service_all_passwords" ON user_passwords FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================
+-- 4.1 ESTADO COMPARTILHADO DO APP (SINCRONIZACAO)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS app_state (
+  key text PRIMARY KEY,
+  data jsonb,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE app_state ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "app_state_all" ON app_state;
+CREATE POLICY "app_state_all" ON app_state FOR ALL USING (true) WITH CHECK (true);
+
+-- ============================================================
 -- 5. DADOS INICIAIS (SEED)
 -- ============================================================
 

@@ -405,20 +405,18 @@
 
     // Auto-detect atraso: encounters past time still marked as agendado
     const now = new Date();
+    const atrasados = [];
     meusEncontros.forEach(e => {
       if (e.status === 'agendado') {
         const dt = new Date(e.data.replace(' ', 'T'));
         // If past by more than 1 hour, mark as atrasado
         if (now - dt > 3600000) {
           e.status = 'atrasado';
-          const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-          if (db.encontros) {
-            const dbEv = db.encontros.find(x => x.id === e.id);
-            if (dbEv) { dbEv.status = 'atrasado'; localStorage.setItem('resolutio_db', JSON.stringify(db)); }
-          }
+          atrasados.push(e.id);
         }
       }
     });
+    await Promise.all(atrasados.map(id => API.encontros.update(id, { status: 'atrasado' }).catch(() => {})));
 
     const realizados = meusEncontros.filter(e => e.status === 'realizado');
     document.getElementById('kpiEncontros').textContent = realizados.length;

@@ -5,20 +5,14 @@ function renderFuncionarioNav(activePage = 'dashboard') {
   const userEmail = (user?.email || '').toLowerCase();
   const userName = (user?.nome || '').toLowerCase();
 
-  // Buscar funcionario na base de dados para ler funcao exata
-  let roleId = 'diretora_academica'; // default fallback
-  try {
-    const db = getDB();
-    const func = (db.funcionarios || []).find(f => (f.email && f.email.toLowerCase() === userEmail) || (f.nome && f.nome.toLowerCase() === userName));
-    if (func && func.funcao) {
-      roleId = func.funcao;
-    } else if (userName.includes('eduarda') || userEmail.includes('comercial')) {
+  // A funcao vem na sessao do Supabase (gravada no login).
+  let roleId = user?.funcao || 'diretora_academica';
+  if (!user?.funcao) {
+    if (userName.includes('eduarda') || userEmail.includes('comercial')) {
       roleId = 'comercial';
     } else if (userName.includes('rocha') || userEmail.includes('admin') || userEmail.includes('financeiro')) {
       roleId = 'administrativo_financeiro';
     }
-  } catch (e) {
-    console.warn('Erro ao obter funcao do funcionario', e);
   }
 
   const navContainer = document.getElementById('dynamicNav');

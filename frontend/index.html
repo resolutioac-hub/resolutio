@@ -368,34 +368,20 @@
     const password = document.getElementById('password')?.value || '';
     if(!identifier){ toast('Informe seu usuário ou e-mail','error'); return; }
     if(!password){ toast('Informe sua senha','error'); return; }
-    const ok = await verifyCredentials(identifier, password);
-    if(!ok){ toast('Usuário ou senha incorretos.', 'error'); return; }
-    const normalized = identifier.toLowerCase();
-    const isAdmin = normalized === 'admin' || normalized === 'admin@resolutio.com';
-    const client = isAdmin ? null : findClientByIdentifier(normalized);
-    const func = (!isAdmin && !client) ? findFuncionarioByEmail(normalized) : null;
-    let role, user;
-    if (isAdmin) {
-      role = 'admin';
-      user = { email: 'admin@resolutio.com', nome: 'Admin', role: 'admin' };
-    } else if (client) {
-      role = 'cliente';
-      user = { email: client.email, cpf: client.cpf || '', nome: client.nome, role: 'cliente' };
-    } else if (func) {
-      role = 'funcionario';
-      user = { email: func.email, nome: func.nome, role: 'funcionario', id: func.id, funcao: func.funcao };
-    } else {
-      toast('Nenhuma conta encontrada com esse identificador.', 'error');
-      return;
+    try {
+      const result = await authenticate(identifier, password);
+      if(!result){ toast('Usuário ou senha incorretos.', 'error'); return; }
+      setSession(result.role, result.user);
+      if (result.role === 'cliente' && clienteNeedsPasswordSetup(result.user)) {
+        window.location.href = './cliente/definir-senha.html';
+        return;
+      }
+      const dest={admin:'./admin/dashboard.html',funcionario:'./funcionario/dashboard.html',cliente:'./cliente/dashboard.html'};
+      window.location.href = dest[result.role] || './index.html';
+    } catch (err) {
+      console.error('[Resolutio] Falha no login:', err);
+      toast('Não foi possível conectar ao servidor. Tente novamente.', 'error');
     }
-    localStorage.setItem('resolutio_role', role);
-    localStorage.setItem('resolutio_user', JSON.stringify(user));
-    if (role === 'cliente' && clienteNeedsPasswordSetup(user)) {
-      window.location.href = './cliente/definir-senha.html';
-      return;
-    }
-    const dest={admin:'./admin/dashboard.html',funcionario:'./funcionario/dashboard.html',cliente:'./cliente/dashboard.html'};
-    window.location.href = dest[role] || './index.html';
   }
   function handleLogin(e){
     e.preventDefault();

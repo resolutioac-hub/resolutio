@@ -105,11 +105,11 @@
         <h2 class="section-card__title">Sistema</h2>
         <div class="config-row">
           <div><div class="config-label">Banco de dados</div><div class="config-desc">Fonte de dados atual</div></div>
-          <div class="config-value">Mock (localStorage)</div>
+          <div class="config-value" id="dbSource">Verificando...</div>
         </div>
         <div class="config-row">
-          <div><div class="config-label">Supabase</div><div class="config-desc">Status da integração</div></div>
-          <div class="config-value" style="color:var(--muted)">Não configurado</div>
+          <div><div class="config-label">Supabase</div><div class="config-desc">Sincronização entre dispositivos</div></div>
+          <div class="config-value" id="supabaseStatus" style="color:var(--muted)">Verificando...</div>
         </div>
         <div class="config-row">
           <div><div class="config-label">Versão</div><div class="config-desc">Versão atual do sistema</div></div>
@@ -120,8 +120,8 @@
       <div class="section-card anim-up">
         <h2 class="section-card__title">Ações</h2>
         <div class="config-row">
-          <div><div class="config-label">Limpar dados</div><div class="config-desc">Remove todos os dados mock do localStorage</div></div>
-          <button class="btn btn--ghost btn--sm" onclick="if(confirm('Tem certeza? Isso vai limpar todos os dados.')){localStorage.removeItem('resolutio_db');toast('Dados limpos!');location.reload();}">Limpar</button>
+          <div><div class="config-label">Recarregar dados</div><div class="config-desc">Busca novamente os dados salvos na nuvem</div></div>
+          <button class="btn btn--ghost btn--sm" onclick="location.reload()">Recarregar</button>
         </div>
         <div class="config-row">
           <div><div class="config-label">Sair do sistema</div><div class="config-desc">Encerrar sessão atual</div></div>
@@ -137,6 +137,14 @@
 <script src="../js/utils.js"></script>
 <script>
   requireAuth(['admin']); setupSidebar();
+  // Supabase agora e a unica fonte de dados
+  document.getElementById('dbSource').textContent = 'Supabase (nuvem)';
+  const statusEl = document.getElementById('supabaseStatus');
+  statusEl.textContent = 'Conectando...';
+  window.ResolutioCloud.ready.then(() => {
+    statusEl.textContent = window.ResolutioCloud.online ? 'Conectado' : 'Sem conexão';
+    statusEl.style.color = window.ResolutioCloud.online ? 'var(--accent)' : '#EF4444';
+  });
   document.querySelectorAll('.anim-up').forEach(el=>{
     const rect = el.getBoundingClientRect();
     if(rect.top < window.innerHeight) el.classList.add('is-visible');

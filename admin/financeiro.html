@@ -699,6 +699,7 @@
 
   let allPags = [];
   let allDespesas = [];
+  let allPayLinks = {};
   const datasetsPkgs = [{ data: [] }, { data: [] }, { data: [] }];
   let pagCurrentPage = 1;
   const pagPerPage = 10;
@@ -712,8 +713,14 @@
   }
 
   // ===================== PAYMENT LINKS =====================
-  function getPaymentLink(pag) { return localStorage.getItem('pay_link_' + pag.id) || ''; }
-  function setPaymentLink(pagId, link) { localStorage.setItem('pay_link_' + pagId, link); }
+  function getPaymentLink(pag) { return allPayLinks[pag.id] || ''; }
+  function setPaymentLink(pagId, link) {
+    allPayLinks[pagId] = link;
+    return API.payLinks.set(pagId, link).catch(err => {
+      console.error(err);
+      toast('Nao foi possivel salvar o link de pagamento.', 'error');
+    });
+  }
 
   // ===================== MODALS =====================
   function openModal(id) { document.getElementById(id)?.classList.add('open'); }
@@ -957,9 +964,17 @@
     if (!confirm('Excluir esta despesa?')) return;
     API.despesas.remove(id).then(() => { toast('Despesa excluída!'); loadData(); });
   }
-  function confirmDespesa(id) {
+  async function confirmDespesa(id) {
     const d = allDespesas.find(x => x.id === id);
-    if (d) { d.status = 'pago'; const db = JSON.parse(localStorage.getItem('resolutio_db')); const idx = db.despesas.findIndex(x=>x.id===id); if(idx>=0) db.despesas[idx].status='pago'; localStorage.setItem('resolutio_db', JSON.stringify(db)); toast('Despesa confirmada!'); loadData(); }
+    if (!d) return;
+    try {
+      await API.despesas.update(id, { status: 'pago' });
+      d.status = 'pago';
+      toast('Despesa confirmada!');
+      loadData();
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel confirmar a despesa.', 'error');
+    }
   }
 
   // Chart.js init — called once
@@ -1512,6 +1527,8 @@
   async function loadData() {
     allPags = await API.pagamentos.list();
     allDespesas = await API.despesas.list();
+    const links = await API.payLinks.list();
+    allPayLinks = Object.fromEntries(links.map(item => [item.id, item.link]));
 
     // Populate client filter
     const clientes = [...new Set(allPags.map(p => p.cliente))].sort();

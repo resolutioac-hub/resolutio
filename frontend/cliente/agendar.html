@@ -222,12 +222,9 @@
   function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
   document.addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open'); });
 
-  // Slots
-  function loadSlots() {
-    try { slots = JSON.parse(localStorage.getItem('resolutio_slots') || '{}'); } catch { slots = {}; }
-  }
-  function saveSlots() {
-    localStorage.setItem('resolutio_slots', JSON.stringify(slots));
+  // Slots (Supabase)
+  async function loadSlots() {
+    try { slots = await API.slots.map(); } catch (err) { console.error(err); slots = {}; }
   }
   function getSlotsForDate(dateKey) {
     return slots[dateKey] || [];
@@ -398,54 +395,47 @@
     openModal('confirmModal');
   }
 
-  function confirmarAgendamento() {
+  async function confirmarAgendamento() {
     if (!selectedDate || !selectedSlot) return;
     const tipo = document.getElementById('tipoEncontro')?.value || 'Mentoria';
     const obs = document.getElementById('obsEncontro')?.value?.trim() || '';
     const clientName = getClientName();
     const dt = selectedDate + ' ' + selectedSlot;
 
-    // Create event
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    if (!db.encontros) db.encontros = [];
-    db.encontros.push({
-      id: 'e' + Date.now(),
-      titulo: tipo,
-      cliente: clientName,
-      funcionario: 'Bruna Sirqueira',
-      data: dt,
-      status: 'agendado',
-      observacoes: obs
-    });
-    localStorage.setItem('resolutio_db', JSON.stringify(db));
-
-    // Remove slot
-    const daySlots = getSlotsForDate(selectedDate);
-    const slotIdx = daySlots.findIndex(s => s.time === selectedSlot);
-    if (slotIdx >= 0) {
-      daySlots.splice(slotIdx, 1);
-      slots[selectedDate] = daySlots;
-      saveSlots();
+    try {
+      await API.encontros.create({
+        titulo: tipo,
+        cliente: clientName,
+        funcionario: 'Bruna Sirqueira',
+        data: dt,
+        status: 'agendado',
+        observacoes: obs
+      });
+      await API.slots.remove(selectedDate, selectedSlot);
+      const daySlots = getSlotsForDate(selectedDate);
+      const slotIdx = daySlots.findIndex(s => s.time === selectedSlot);
+      if (slotIdx >= 0) {
+        daySlots.splice(slotIdx, 1);
+        slots[selectedDate] = daySlots;
+      }
+      closeModal('confirmModal');
+      toast('Encontro agendado com sucesso!');
+      selectedSlot = null;
+      loadData();
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel agendar o encontro.', 'error');
     }
-
-    closeModal('confirmModal');
-    toast('Encontro agendado com sucesso!');
-    selectedSlot = null;
-    loadData();
   }
 
   // Cancel event
-  function cancelarMeuEncontro(eventId) {
+  async function cancelarMeuEncontro(eventId) {
     if (!confirm('Tem certeza que deseja desmarcar este encontro?')) return;
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    if (db.encontros) {
-      const ev = db.encontros.find(e => e.id === eventId);
-      if (ev) {
-        ev.status = 'cancelado';
-        localStorage.setItem('resolutio_db', JSON.stringify(db));
-        toast('Encontro desmarcado');
-        loadData();
-      }
+    try {
+      await API.encontros.update(eventId, { status: 'cancelado' });
+      toast('Encontro desmarcado');
+      loadData();
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel desmarcar o encontro.', 'error');
     }
   }
 
@@ -479,12 +469,16 @@
 
   // Load data
   async function loadData() {
-    loadSlots();
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    meusEncontros = (db.encontros || []).filter(e => e.cliente === getClientName());
-    renderCalendar();
-    renderMyEvents();
-    if (selectedDate) renderDayPanel();
+    try {
+      await loadSlots();
+      meusEncontros = (await API.encontros.list()).filter(e => e.cliente === getClientName());
+      renderCalendar();
+      renderMyEvents();
+      if (selectedDate) renderDayPanel();
+    } catch (err) {
+      console.error(err);
+      toast('Nao foi possivel carregar a agenda.', 'error');
+    }
   }
 
   loadData();

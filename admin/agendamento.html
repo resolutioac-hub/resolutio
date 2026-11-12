@@ -237,12 +237,15 @@
   let encontros = [];
   let slots = {};
 
-  // Load availability from localStorage
-  function loadSlots() {
-    try { slots = JSON.parse(localStorage.getItem('resolutio_slots') || '{}'); } catch { slots = {}; }
+  // Disponibilidade fica no Supabase.
+  async function loadSlots() {
+    try { slots = await API.slots.map(); } catch (err) { console.error(err); slots = {}; }
   }
   function saveSlots() {
-    localStorage.setItem('resolutio_slots', JSON.stringify(slots));
+    return API.slots.replaceAll(slots).catch(err => {
+      console.error('[Resolutio] Falha ao salvar horarios:', err);
+      toast('Nao foi possivel salvar os horarios.', 'error');
+    });
   }
   function getSlotsForDate(dateKey) {
     return slots[dateKey] || [];
@@ -420,29 +423,23 @@
     toast('Horário removido');
   }
 
-  function cancelarEncontro(eventId) {
+  async function cancelarEncontro(eventId) {
     if (!confirm('Tem certeza que deseja cancelar este encontro?')) return;
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    if (db.encontros) {
-      const ev = db.encontros.find(e => e.id === eventId);
-      if (ev) {
-        ev.status = 'cancelado';
-        localStorage.setItem('resolutio_db', JSON.stringify(db));
-        toast('Encontro cancelado');
-        loadData();
-      }
+    try {
+      await API.encontros.update(eventId, { status: 'cancelado' });
+      toast('Encontro cancelado');
+      loadData();
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel cancelar o encontro.', 'error');
     }
   }
 
-  function updateMeetLink(eventId, link) {
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    if (db.encontros) {
-      const ev = db.encontros.find(e => e.id === eventId);
-      if (ev) {
-        ev.meet = link.trim();
-        localStorage.setItem('resolutio_db', JSON.stringify(db));
-        if (link.trim()) toast('Link da reunião salvo');
-      }
+  async function updateMeetLink(eventId, link) {
+    try {
+      await API.encontros.update(eventId, { meet: link.trim() });
+      if (link.trim()) toast('Link da reunião salvo');
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel salvar o link.', 'error');
     }
   }
 
@@ -496,7 +493,7 @@
       : '<option value="Dra. Bruna">Dra. Bruna</option>';
   }
 
-  function saveEvent() {
+  async function saveEvent() {
     const cliente = document.getElementById('eventCliente').value;
     const titulo = document.getElementById('eventTitulo').value.trim();
     const date = document.getElementById('eventDate').value;
@@ -506,10 +503,7 @@
     const meetLink = document.getElementById('eventMeet').value.trim();
     if (!cliente || !titulo || !date) return toast('Preencha todos os campos', 'error');
 
-    const db = JSON.parse(localStorage.getItem('resolutio_db') || '{}');
-    if (!db.encontros) db.encontros = [];
     const encontro = {
-      id: 'e' + Date.now(),
       cliente,
       titulo,
       data: `${date} ${time}`,
@@ -518,26 +512,26 @@
       funcionario: func
     };
     if (pilarVal) encontro.pilar = parseInt(pilarVal);
-    db.encontros.push(encontro);
-    localStorage.setItem('resolutio_db', JSON.stringify(db));
-
-    // Remove slot if exists
-    const daySlots = getSlotsForDate(date);
-    const slotIdx = daySlots.findIndex(s => s.time === time);
-    if (slotIdx >= 0) {
-      daySlots.splice(slotIdx, 1);
-      slots[date] = daySlots;
-      saveSlots();
+    try {
+      await API.encontros.create(encontro);
+      await API.slots.remove(date, time);
+      const daySlots = getSlotsForDate(date);
+      const slotIdx = daySlots.findIndex(s => s.time === time);
+      if (slotIdx >= 0) {
+        daySlots.splice(slotIdx, 1);
+        slots[date] = daySlots;
+      }
+      closeModal('newEventModal');
+      toast('Encontro agendado!');
+      loadData();
+    } catch (err) {
+      toast(err.message || 'Nao foi possivel agendar o encontro.', 'error');
     }
-
-    closeModal('newEventModal');
-    toast('Encontro agendado!');
-    loadData();
   }
 
   async function loadData() {
     encontros = await API.encontros.list();
-    loadSlots();
+    await loadSlots();
     renderCalendar();
     if (selectedDate) renderDayPanel();
   }
