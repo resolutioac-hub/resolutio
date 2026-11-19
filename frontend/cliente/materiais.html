@@ -98,6 +98,23 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
   }
 
+  function normalizarTexto(v) {
+    return String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  }
+
+  function materialVisivelParaCliente(m, user) {
+    if (!m) return false;
+    const alvo = normalizarTexto(m.cliente);
+    if (!alvo || alvo === 'geral' || alvo === 'todos' || alvo === 'todos os clientes') return true;
+    const identificadores = [user?.nome, user?.email, user?.email?.split('@')[0]]
+      .map(normalizarTexto)
+      .filter(Boolean);
+    if (identificadores.includes(alvo)) return true;
+    return Array.isArray(m.clientes) && m.clientes.some(c =>
+      identificadores.includes(normalizarTexto(typeof c === 'string' ? c : (c && (c.nome || c.email))))
+    );
+  }
+
   async function abrirMaterial(id) {
     try {
       const url = await API.materiais.abrirArquivo(id);
@@ -115,10 +132,8 @@
 
   async function load() {
     const user = getSession().user;
-    const nome = user?.nome || user?.email?.split('@')[0] || 'cliente';
-
     const materiais = await API.materiais.list();
-    const meusMateriais = materiais.filter(m => m.cliente === nome);
+    const meusMateriais = materiais.filter(m => materialVisivelParaCliente(m, user));
 
     if (!meusMateriais.length) {
       document.getElementById('materiaisList').innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:40px 0">Nenhum material disponível no momento.</p>';

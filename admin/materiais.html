@@ -106,10 +106,14 @@
     </header>
 
     <div class="page">
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:10px">
+        <label for="uploadCliente" style="font-size:0.78rem;color:var(--muted);font-weight:600">Destinatário dos arquivos</label>
+        <select id="uploadCliente" class="form-control" style="width:260px;padding:7px 10px;font-size:0.82rem"></select>
+      </div>
       <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
         <p>Arraste arquivos aqui ou clique para selecionar</p>
-        <p style="font-size:0.72rem;margin-top:4px">PDF, imagens, documentos — o arquivo é anexado de verdade e pode ser aberto ou baixado depois</p>
+        <p style="font-size:0.72rem;margin-top:4px">PDF, imagens e documentos — "Geral" aparece para todos os clientes.</p>
         <input type="file" id="fileInput" multiple onchange="handleUpload(event)">
       </div>
 
@@ -194,10 +198,11 @@
   async function processFiles(files) {
     let ok = 0;
     const falhas = [];
+    const cliente = document.getElementById('uploadCliente').value || 'Geral';
     for (const file of files) {
       try {
         await API.materiais.create({
-          cliente: 'Geral',
+          cliente,
           titulo: file.name,
           tipo: guessTipo(file),
           _arquivo: file
@@ -302,9 +307,11 @@
 
   async function loadClientesForMaterial() {
     const clientes = await API.clientes.list();
-    document.getElementById('matCliente').innerHTML = clientes.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('') + '<option value="Geral">Geral</option>';
+    const options = clientes.map(c => `<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('');
+    document.getElementById('uploadCliente').innerHTML = '<option value="Geral" selected>Geral (todos os clientes)</option>' + options;
+    document.getElementById('matCliente').innerHTML = options + '<option value="Geral">Geral (todos os clientes)</option>';
     const sel = document.getElementById('filterCliente');
-    sel.innerHTML = '<option value="">Todos os clientes</option>' + clientes.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('') + '<option value="Geral">Geral</option>';
+    sel.innerHTML = '<option value="">Todos os clientes</option>' + options + '<option value="Geral">Geral</option>';
   }
 
   async function saveMaterial() {
